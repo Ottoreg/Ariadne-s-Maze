@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#15151c"/>
+  <!-- Labyrinthe stylisé -->
+  <g fill="none" stroke="#2ec4b6" stroke-width="22" stroke-linecap="square">
+    <path d="M112 112 H400 V400 H144 V168 H344 V344 H200 V224 H288 V288 H240"/>
+  </g>
+  <!-- Corne du Minotaure -->
+  <circle cx="256" cy="256" r="18" fill="#c0392b"/>
+</svg>

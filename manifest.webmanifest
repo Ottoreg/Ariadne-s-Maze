@@ -1,0 +1,20 @@
+{
+  "name": "Ariadne's Maze",
+  "short_name": "Ariadne",
+  "description": "Un labyrinthe en vue de dessus, généré par seed, peuplé d'événements et hanté par le Minotaure.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0f0f16",
+  "theme_color": "#15151c",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "./assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

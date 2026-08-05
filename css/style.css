@@ -1,0 +1,298 @@
+/* style.css — Mise en page et thème du jeu (vue topdown + HUD). */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #0f0f16;
+  --panel: #1b1b26;
+  --panel-2: #232333;
+  --text: #e8e8f0;
+  --muted: #9a9ab0;
+  --accent: #2ec4b6;
+  --danger: #e74c3c;
+  --border: #2c2c3c;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  transition: background 0.15s;
+}
+
+/* Effet d'alerte lors de la détection par le Minotaure. */
+body.alert {
+  background: #3a0f12;
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    'topbar topbar'
+    'stage  hud';
+  height: 100vh;
+  height: 100dvh;
+}
+
+/* --- Barre du haut --- */
+#topbar {
+  grid-area: topbar;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+#topbar h1 {
+  font-size: 18px;
+  letter-spacing: 0.5px;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.seed-field {
+  display: flex;
+  flex-direction: column;
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.seed-field input {
+  margin-top: 2px;
+  width: 160px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+}
+
+.toolbar button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.toolbar button:hover {
+  background: #2e2e42;
+  border-color: var(--accent);
+}
+
+/* --- Scène de jeu --- */
+#stage {
+  grid-area: stage;
+  position: relative;
+  overflow: hidden;
+  background: #15151c;
+}
+
+#game {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+/* --- Croix directionnelle tactile --- */
+#dpad {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 150px;
+  height: 150px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 4px;
+  opacity: 0.85;
+}
+
+.dpad-btn {
+  border: 1px solid var(--border);
+  background: rgba(35, 35, 51, 0.9);
+  color: var(--text);
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.dpad-btn:active {
+  background: var(--accent);
+  color: #0f0f16;
+}
+.dpad-btn.up { grid-column: 2; grid-row: 1; }
+.dpad-btn.left { grid-column: 1; grid-row: 2; }
+.dpad-btn.right { grid-column: 3; grid-row: 2; }
+.dpad-btn.down { grid-column: 2; grid-row: 3; }
+
+/* --- Overlay de fin --- */
+#overlay {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(8, 8, 14, 0.75);
+  backdrop-filter: blur(2px);
+}
+#overlay.visible { display: flex; }
+
+.overlay-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 32px;
+  text-align: center;
+  max-width: 340px;
+}
+.overlay-card h2 { margin-bottom: 10px; font-size: 24px; }
+.overlay-card p { color: var(--muted); margin-bottom: 18px; }
+.overlay-card button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent);
+  color: #0f0f16;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* --- HUD latéral --- */
+#hud {
+  grid-area: hud;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.panel {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.panel h3 {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.stat { display: flex; flex-direction: column; gap: 4px; }
+.stat-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--muted);
+}
+.stat-value { font-size: 16px; font-weight: 600; }
+.stat-value.seed { font-family: ui-monospace, monospace; font-size: 12px; word-break: break-all; }
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+}
+.stat-row .stat { align-items: flex-start; }
+
+.hp-bar {
+  height: 14px;
+  background: #101018;
+  border-radius: 7px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+#hp-fill {
+  height: 100%;
+  width: 100%;
+  background: #2ecc71;
+  transition: width 0.2s, background 0.2s;
+}
+
+#inventory-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+#inventory-list li {
+  font-size: 13px;
+  padding: 4px 8px;
+  background: #191925;
+  border-radius: 6px;
+}
+#inventory-list li.empty { color: var(--muted); font-style: italic; }
+
+.log-panel { flex: 1; min-height: 120px; display: flex; flex-direction: column; }
+#log {
+  flex: 1;
+  overflow-y: auto;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text);
+  max-height: 220px;
+}
+.log-line {
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.legend ul { list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 12px; }
+.legend .dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.hint { margin-top: 8px; font-size: 11px; color: var(--muted); }
+
+/* --- Responsive : HUD sous la scène sur petit écran --- */
+@media (max-width: 820px) {
+  #app {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 60vh 1fr;
+    grid-template-areas:
+      'topbar'
+      'stage'
+      'hud';
+  }
+  #hud { border-left: none; border-top: 1px solid var(--border); }
+  .seed-field input { width: 120px; }
+}
