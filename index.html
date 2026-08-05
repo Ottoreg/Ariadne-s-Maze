@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#15151c" />
+  <title>Ariadne's Maze</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="./assets/icon.svg" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <div id="app">
+    <header id="topbar">
+      <h1>Ariadne's Maze</h1>
+      <div class="toolbar">
+        <label class="seed-field">
+          Seed
+          <input id="seed-input" type="text" autocomplete="off" spellcheck="false" />
+        </label>
+        <button id="new-seed-btn" title="Générer avec cette seed">Générer</button>
+        <button id="random-seed-btn" title="Seed aléatoire">🎲</button>
+        <button id="restart-btn" title="Recommencer ce niveau">↻</button>
+      </div>
+    </header>
+
+    <main id="stage">
+      <canvas id="game"></canvas>
+
+      <!-- Croix directionnelle tactile -->
+      <div id="dpad">
+        <button data-dir="up" class="dpad-btn up" aria-label="Haut">▲</button>
+        <button data-dir="left" class="dpad-btn left" aria-label="Gauche">◀</button>
+        <button data-dir="right" class="dpad-btn right" aria-label="Droite">▶</button>
+        <button data-dir="down" class="dpad-btn down" aria-label="Bas">▼</button>
+      </div>
+
+      <!-- Écran de fin (mort / victoire) -->
+      <div id="overlay">
+        <div class="overlay-card">
+          <h2 id="overlay-title">Game Over</h2>
+          <p id="overlay-text"></p>
+          <button id="overlay-btn">Recommencer</button>
+        </div>
+      </div>
+    </main>
+
+    <aside id="hud">
+      <section class="panel">
+        <div class="stat">
+          <span class="stat-label">Points de vie</span>
+          <div class="hp-bar"><div id="hp-fill"></div></div>
+          <span id="hp-text" class="stat-value">20 / 20</span>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><span class="stat-label">Or</span><span id="gold-text" class="stat-value">0</span></div>
+          <div class="stat"><span class="stat-label">Tours</span><span id="turn-text" class="stat-value">0</span></div>
+          <div class="stat"><span class="stat-label">Seed</span><span id="seed-label" class="stat-value seed">-</span></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h3>Inventaire</h3>
+        <ul id="inventory-list"><li class="empty">Inventaire vide</li></ul>
+      </section>
+
+      <section class="panel log-panel">
+        <h3>Journal</h3>
+        <div id="log"></div>
+      </section>
+
+      <section class="panel legend">
+        <h3>Légende</h3>
+        <ul>
+          <li><span class="dot" style="background:#2ec4b6"></span> Aventurier</li>
+          <li><span class="dot" style="background:#c0392b"></span> Minotaure</li>
+          <li><span class="dot" style="background:#ffd166"></span> Trésor</li>
+          <li><span class="dot" style="background:#e07a5f"></span> Piège</li>
+          <li><span class="dot" style="background:#b5179e"></span> Monstre</li>
+          <li>⚑ Sortie · ⌂ Entrée</li>
+        </ul>
+        <p class="hint">Déplacement : flèches / ZQSD / WASD · ou la croix tactile.</p>
+      </section>
+    </aside>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
