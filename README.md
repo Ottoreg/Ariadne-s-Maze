@@ -25,6 +25,15 @@ hors-ligne.
 
 ## Lancer le jeu
 
+### Test rapide (sans serveur) — `standalone.html`
+
+Pour tester immédiatement, il suffit d'ouvrir **`standalone.html`** dans un
+navigateur (double-clic). Ce fichier est **autonome** : tout le HTML, le CSS et
+le JavaScript y sont intégrés, il fonctionne donc directement en `file://`, sans
+serveur. *(Généré à partir des modules ci-dessous — même logique.)*
+
+### Version PWA complète (installable / hors-ligne)
+
 La PWA utilise des modules ES et un service worker : il faut la servir via HTTP
 (pas en `file://`). Depuis le dossier du projet :
 
