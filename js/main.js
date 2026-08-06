@@ -29,6 +29,21 @@ const drawer = $('drawer');
 const drawerTitle = $('drawer-title');
 const scrim = $('scrim');
 
+// Éléments de la modale de combat.
+const combatEl = $('combat');
+const combatLog = $('combat-log');
+const cbtEnemyName = $('cbt-enemy-name');
+const cbtEnemySprite = $('cbt-enemy-sprite');
+const cbtEnemyHp = $('cbt-enemy-hp');
+const cbtEnemyHpText = $('cbt-enemy-hp-text');
+const cbtPlayerHp = $('cbt-player-hp');
+const cbtPlayerHpText = $('cbt-player-hp-text');
+const cbtBtns = {
+  attack: $('cbt-attack'),
+  parry: $('cbt-parry'),
+  flee: $('cbt-flee'),
+};
+
 // Seed initiale : ?seed=... dans l'URL, sinon aléatoire.
 const urlSeed = new URLSearchParams(location.search).get('seed');
 let currentSeed = urlSeed || randomSeed();
@@ -51,6 +66,9 @@ function wireGame(g) {
   g.on('update', () => updateHud(g));
   g.on('detected', () => flashDetection());
   g.on('gameover', ({ won }) => showOverlay(g, won));
+  g.on('combat-start', (c) => openCombat(c));
+  g.on('combat-update', (c) => renderCombat(c, true));
+  g.on('combat-end', (c) => endCombat(c));
   updateHud(g);
 }
 
@@ -118,6 +136,8 @@ function flashDetection() {
 }
 
 function showOverlay(g, won) {
+  // La modale de combat cède la place à l'écran de fin.
+  combatEl.classList.remove('visible');
   overlayTitle.textContent = won ? 'Niveau terminé 🎉' : 'Game Over 💀';
   overlayText.textContent = won
     ? `Sortie atteinte en ${g.turn} tours avec ${g.player.gold} or.`
@@ -126,6 +146,77 @@ function showOverlay(g, won) {
   overlay.dataset.won = won ? '1' : '0';
   overlay.classList.add('visible');
 }
+
+// ---------- Modale de combat ----------
+let combatClosing = null;
+
+function openCombat(c) {
+  clearTimeout(combatClosing);
+  cbtEnemyName.textContent = c.enemy.name;
+  cbtEnemySprite.textContent = c.enemy.emoji || '👹';
+  combatLog.innerHTML = '';
+  setActionsDisabled(false);
+  renderCombat(c, false);
+  combatEl.classList.add('visible');
+  combatEl.setAttribute('aria-hidden', 'false');
+}
+
+function renderCombat(c, animate) {
+  const p = game.player;
+  const ePct = Math.max(0, (c.enemy.hp / c.enemy.maxHp) * 100);
+  const pPct = Math.max(0, (p.hp / p.maxHp) * 100);
+  cbtEnemyHp.style.width = ePct + '%';
+  cbtPlayerHp.style.width = pPct + '%';
+  cbtEnemyHpText.textContent = `${c.enemy.hp} / ${c.enemy.maxHp}`;
+  cbtPlayerHpText.textContent = `${p.hp} / ${p.maxHp}`;
+
+  // Journal du combat (on affiche l'historique complet du combat en cours).
+  combatLog.innerHTML = '';
+  for (const line of c.log) {
+    const div = document.createElement('div');
+    div.className = 'cl';
+    div.textContent = line;
+    combatLog.appendChild(div);
+  }
+  combatLog.scrollTop = combatLog.scrollHeight;
+
+  if (animate) {
+    // Petite secousse sur le dernier combattant touché.
+    const last = c.log[c.log.length - 1] || '';
+    if (last.includes('te touche') || last.includes('pares')) bump(cbtPlayerSprite());
+    if (last.includes('Tu frappes')) bump(cbtEnemySprite);
+  }
+}
+
+function cbtPlayerSprite() { return $('cbt-player-sprite'); }
+
+function bump(el) {
+  if (!el) return;
+  el.classList.remove('hit');
+  // Force le reflow pour rejouer l'animation.
+  void el.offsetWidth;
+  el.classList.add('hit');
+}
+
+function endCombat(c) {
+  setActionsDisabled(true);
+  // On laisse le temps de lire l'issue avant de fermer la modale.
+  const delay = c.result === 'lose' ? 500 : 950;
+  combatClosing = setTimeout(() => {
+    combatEl.classList.remove('visible');
+    combatEl.setAttribute('aria-hidden', 'true');
+  }, delay);
+}
+
+function setActionsDisabled(v) {
+  cbtBtns.attack.disabled = v;
+  cbtBtns.parry.disabled = v;
+  cbtBtns.flee.disabled = v;
+}
+
+cbtBtns.attack.addEventListener('click', () => game.combatAttack());
+cbtBtns.parry.addEventListener('click', () => game.combatParry());
+cbtBtns.flee.addEventListener('click', () => game.combatFlee());
 
 overlayBtn.addEventListener('click', () => {
   overlay.classList.remove('visible');

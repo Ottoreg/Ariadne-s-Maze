@@ -9,6 +9,8 @@ export class Player {
     this.gold = 0;
     // Inventaire simple : map nom d'objet -> quantité.
     this.inventory = new Map();
+    // Arme équipée par défaut : un glaive de base (3 dégâts par coup).
+    this.weapon = { name: 'Glaive', damage: 3, hitChance: 0.8 };
   }
 
   isAlive() {
@@ -45,5 +47,7 @@ export class Player {
     this.hp = this.maxHp;
     this.gold = 0;
     this.inventory.clear();
+    // On repart toujours avec le glaive de base.
+    this.weapon = { name: 'Glaive', damage: 3, hitChance: 0.8 };
   }
 }

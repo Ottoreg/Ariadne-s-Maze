@@ -6,6 +6,7 @@ import { Maze, TILE } from './maze.js';
 import { Player } from './player.js';
 import { Minotaur } from './minotaur.js';
 import { computeEvent, EVENT } from './events.js';
+import { Combat } from './combat.js';
 import { RNG } from './rng.js';
 
 export class Game {
@@ -39,6 +40,12 @@ export class Game {
     this.over = false;
     this.won = false;
     this.mazeShifted = false;
+
+    // État de combat (modale interactive).
+    this.inCombat = false;
+    this.combat = null;
+    this._combatCell = null;   // case où se déroule le combat
+    this._combatReturn = null; // case de repli en cas de fuite réussie
 
     this._reveal(this.player.x, this.player.y);
     this._resolveEvent(this.player.x, this.player.y, true); // entrée = sûre
@@ -76,7 +83,7 @@ export class Game {
 
   // Déplacement du joueur d'une case. dir ∈ {up,down,left,right}.
   move(dir) {
-    if (this.over) return;
+    if (this.over || this.inCombat) return;
     const deltas = {
       up: { dx: 0, dy: -1 },
       down: { dx: 0, dy: 1 },
@@ -93,13 +100,21 @@ export class Game {
       return; // mur : déplacement impossible
     }
 
+    // Case d'où l'on vient (repli en cas de fuite d'un combat).
+    this._combatReturn = { x: this.player.x, y: this.player.y };
+
     this.player.x = nx;
     this.player.y = ny;
     this.turn++;
     this._reveal(nx, ny);
 
-    // Résout l'événement de la case d'arrivée.
+    // Résout l'événement de la case d'arrivée. Peut déclencher un combat :
+    // dans ce cas le « monde » se met en pause (le Minotaure attend la fin).
     this._resolveEvent(nx, ny);
+    if (this.inCombat) {
+      this.emit('update');
+      return;
+    }
 
     // Victoire : atteinte de la sortie.
     if (nx === this.maze.exit.x && ny === this.maze.exit.y && !this.over) {
@@ -121,11 +136,83 @@ export class Game {
   // Le Minotaure, lui, se déplace : utile tactiquement (le laisser passer,
   // guetter, etc.). Sert de bouton d'action principal sur mobile.
   wait() {
-    if (this.over) return;
+    if (this.over || this.inCombat) return;
     this.turn++;
     this.emit('log', '⏳ Tu attends, aux aguets...');
     this._minotaurTurn();
     this.emit('update');
+  }
+
+  // ---------- Combat (modale interactive) ----------
+
+  // Démarre un combat contre le monstre de la case (x, y).
+  _startCombat(ev, x, y) {
+    this.inCombat = true;
+    this._combatCell = { x, y };
+    const enemy = {
+      name: ev.name,
+      emoji: ev.emoji,
+      maxHp: ev.hp,
+      hp: ev.hp,
+      dmg: ev.dmg,
+      hitChance: ev.hit,
+    };
+    this.combat = new Combat(this.player, enemy, this.rng);
+    this.emit('log', `⚔️ Un ${ev.name} surgit !`);
+    this.emit('combat-start', this.combat);
+  }
+
+  // Actions déclenchées par l'interface pendant un combat.
+  combatAttack() { this._combatAction('attack'); }
+  combatParry() { this._combatAction('parry'); }
+  combatFlee() { this._combatAction('flee'); }
+
+  _combatAction(kind) {
+    if (!this.inCombat || !this.combat || this.combat.over) return;
+    const c = this.combat;
+    if (kind === 'attack') c.attack();
+    else if (kind === 'parry') c.parry();
+    else if (kind === 'flee') c.flee();
+
+    this.emit('combat-update', c);
+    if (c.over) this._endCombat(c);
+  }
+
+  // Applique les conséquences de la fin du combat, puis relance le « monde ».
+  _endCombat(c) {
+    this.inCombat = false;
+    const cell = this._combatCell;
+    const key = `${cell.x},${cell.y}`;
+
+    if (c.result === 'win') {
+      // Le monstre disparaît : on retire son marqueur, la case reste résolue.
+      this.revealedEvents.delete(key);
+      const loot = this.rng.int(2, 6);
+      this.player.addGold(loot);
+      this.emit('log', `🏆 ${c.enemy.name} vaincu ! Tu récupères ${loot} or.`);
+      this._resumeWorld();
+    } else if (c.result === 'flee') {
+      // On autorise un futur combat sur cette case et on recule d'une case.
+      this.resolvedCells.delete(key);
+      if (this._combatReturn) {
+        this.player.x = this._combatReturn.x;
+        this.player.y = this._combatReturn.y;
+      }
+      this._resumeWorld();
+    } else if (c.result === 'lose') {
+      this.emit('log', `💀 ${c.enemy.name} a eu raison de toi...`);
+      this._checkDeath();
+    }
+
+    this.combat = null;
+    this._combatCell = null;
+    this.emit('combat-end', c);
+    this.emit('update');
+  }
+
+  // Le Minotaure joue le tour mis en pause pendant le combat.
+  _resumeWorld() {
+    if (!this.over) this._minotaurTurn();
   }
 
   // Révèle la case et ses voisines immédiates (petit champ de vision).
@@ -156,9 +243,9 @@ export class Game {
         break;
       }
       case EVENT.MONSTER: {
-        this.player.damage(ev.damage);
-        this.emit('log', `⚔️ Rencontre : ${ev.name} t'inflige ${ev.damage} PV de dégâts.`);
-        break;
+        // Une rencontre déclenche un combat en modale (au lieu de dégâts secs).
+        this._startCombat(ev, x, y);
+        return; // le combat prend le relais ; on ne vérifie pas la mort ici
       }
       case EVENT.TREASURE: {
         this.player.addItem(ev.item);

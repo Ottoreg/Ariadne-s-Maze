@@ -327,6 +327,135 @@ kbd {
   font-family: ui-monospace, monospace;
 }
 
+/* ---------- Modale de combat (style Pokémon) ---------- */
+#combat {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: none;
+  flex-direction: column;
+  background: rgba(8, 8, 14, 0.92);
+  backdrop-filter: blur(3px);
+  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 12px)
+           calc(var(--safe-b) + 12px) calc(var(--safe-l) + 12px);
+}
+#combat.visible { display: flex; }
+
+/* Scène : dégradé « arène », ennemi en haut à droite, joueur en bas à gauche. */
+.combat-scene {
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(120% 90% at 80% 15%, rgba(181, 23, 158, 0.18), transparent 60%),
+    radial-gradient(120% 90% at 20% 85%, rgba(46, 196, 182, 0.16), transparent 60%),
+    linear-gradient(180deg, #201a2b, #14141d);
+  overflow: hidden;
+}
+
+.combatant {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 62%;
+}
+.combatant.enemy { top: 12px; right: 14px; }
+.combatant.player { bottom: 12px; left: 14px; }
+
+.cbt-sprite {
+  font-size: 52px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+.combatant.enemy .cbt-sprite { animation: bob 2.4s ease-in-out infinite; }
+.combatant.player .cbt-sprite { transform: scaleX(-1); }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* Secousse quand un combattant est touché. */
+.cbt-sprite.hit { animation: shake 0.3s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.combatant.player .cbt-sprite.hit { animation: shake-flip 0.3s; }
+@keyframes shake-flip {
+  0%,100% { transform: scaleX(-1) translateX(0); }
+  25% { transform: scaleX(-1) translateX(-5px); }
+  75% { transform: scaleX(-1) translateX(5px); }
+}
+
+.cbt-info {
+  background: rgba(15, 15, 22, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-width: 128px;
+}
+.cbt-name { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.cbt-hp {
+  height: 9px;
+  background: #101018;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.cbt-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s; }
+.cbt-hp-fill.enemy { background: #e74c3c; }
+.cbt-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.combat-log {
+  height: 74px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.combat-log .cl { opacity: 0.6; }
+.combat-log .cl:last-child { opacity: 1; color: var(--text); }
+
+.combat-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.combat-actions button {
+  padding: 13px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.05s, opacity 0.1s;
+}
+.combat-actions button .glyph { font-size: 17px; }
+.combat-actions button:active { transform: scale(0.96); background: #2e2e42; }
+#cbt-attack { border-color: rgba(231, 76, 60, 0.5); }
+#cbt-parry { border-color: rgba(52, 152, 219, 0.5); }
+#cbt-flee { border-color: rgba(241, 196, 15, 0.5); }
+.combat-actions button:disabled { opacity: 0.4; pointer-events: none; }
+
+/* Paysage court : on compacte la scène de combat. */
+@media (orientation: landscape) and (max-height: 480px) {
+  .cbt-sprite { font-size: 40px; }
+  .combat-log { height: 52px; }
+  .combat-actions button { padding: 10px 6px; }
+  .cbt-info { min-width: 108px; padding: 5px 8px; }
+}
+
 /* ---------- Overlay de fin ---------- */
 #overlay {
   position: absolute;

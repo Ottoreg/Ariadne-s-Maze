@@ -101,6 +101,37 @@
     </div>
     <div id="scrim"></div>
 
+    <!-- Modale de combat (style Pokémon : ennemi en haut à droite,
+         joueur en bas à gauche) -->
+    <div id="combat" aria-hidden="true">
+      <div class="combat-scene">
+        <!-- Ennemi : haut droite -->
+        <div class="combatant enemy">
+          <div class="cbt-info">
+            <span class="cbt-name" id="cbt-enemy-name">Monstre</span>
+            <div class="cbt-hp"><div class="cbt-hp-fill enemy" id="cbt-enemy-hp"></div></div>
+            <span class="cbt-hp-text" id="cbt-enemy-hp-text">0 / 0</span>
+          </div>
+          <div class="cbt-sprite" id="cbt-enemy-sprite">👹</div>
+        </div>
+        <!-- Joueur : bas gauche -->
+        <div class="combatant player">
+          <div class="cbt-sprite" id="cbt-player-sprite">🗡️</div>
+          <div class="cbt-info">
+            <span class="cbt-name">Aventurier</span>
+            <div class="cbt-hp"><div class="cbt-hp-fill" id="cbt-player-hp"></div></div>
+            <span class="cbt-hp-text" id="cbt-player-hp-text">0 / 0</span>
+          </div>
+        </div>
+      </div>
+      <div class="combat-log" id="combat-log"></div>
+      <div class="combat-actions">
+        <button id="cbt-attack"><span class="glyph">⚔️</span> Attaquer</button>
+        <button id="cbt-parry"><span class="glyph">🛡️</span> Parer</button>
+        <button id="cbt-flee"><span class="glyph">🏃</span> Fuir</button>
+      </div>
+    </div>
+
     <!-- Écran de fin (mort / victoire) -->
     <div id="overlay">
       <div class="overlay-card">
