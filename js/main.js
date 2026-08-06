@@ -1,26 +1,35 @@
-// main.js — Point d'entrée : relie le jeu au DOM (canvas, HUD, contrôles).
+// main.js — Point d'entrée : relie le jeu au DOM (canvas plein écran, HUD en
+// surimpression, tiroirs, contrôles tactiles pensés pour le mobile paysage).
 
 import { Game } from './game.js';
 import { Renderer } from './render.js';
+import { EVENT } from './events.js';
 
-const canvas = document.getElementById('game');
+const $ = (id) => document.getElementById(id);
+
+const canvas = $('game');
 const renderer = new Renderer(canvas);
 
 // Éléments du HUD.
-const hpFill = document.getElementById('hp-fill');
-const hpText = document.getElementById('hp-text');
-const goldText = document.getElementById('gold-text');
-const turnText = document.getElementById('turn-text');
-const invList = document.getElementById('inventory-list');
-const logEl = document.getElementById('log');
-const seedInput = document.getElementById('seed-input');
-const seedLabel = document.getElementById('seed-label');
-const overlay = document.getElementById('overlay');
-const overlayTitle = document.getElementById('overlay-title');
-const overlayText = document.getElementById('overlay-text');
-const overlayBtn = document.getElementById('overlay-btn');
+const hpFill = $('hp-fill');
+const hpText = $('hp-text');
+const goldText = $('gold-text');
+const goldText2 = $('gold-text-2');
+const turnText = $('turn-text');
+const invList = $('inventory-list');
+const logEl = $('log');
+const toastsEl = $('toasts');
+const seedInput = $('seed-input');
+const seedLabel = $('seed-label');
+const overlay = $('overlay');
+const overlayTitle = $('overlay-title');
+const overlayText = $('overlay-text');
+const overlayBtn = $('overlay-btn');
+const drawer = $('drawer');
+const drawerTitle = $('drawer-title');
+const scrim = $('scrim');
 
-// Seed initiale : aléatoire ou celle passée dans l'URL (?seed=...).
+// Seed initiale : ?seed=... dans l'URL, sinon aléatoire.
 const urlSeed = new URLSearchParams(location.search).get('seed');
 let currentSeed = urlSeed || randomSeed();
 seedInput.value = currentSeed;
@@ -28,14 +37,14 @@ seedInput.value = currentSeed;
 const game = new Game(currentSeed);
 wireGame(game);
 
-// --- Rendu continu (boucle d'animation légère) ---
+// --- Boucle de rendu ---
 function loop() {
   renderer.draw(game);
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
 
-// --- Branche les événements du jeu sur l'interface ---
+// --- Liaison des événements du jeu à l'interface ---
 function wireGame(g) {
   seedLabel.textContent = g.seed;
   g.on('log', (msg) => addLog(msg));
@@ -52,6 +61,7 @@ function updateHud(g) {
   hpFill.style.background = pct > 50 ? '#2ecc71' : pct > 25 ? '#f1c40f' : '#e74c3c';
   hpText.textContent = `${p.hp} / ${p.maxHp}`;
   goldText.textContent = p.gold;
+  if (goldText2) goldText2.textContent = p.gold;
   turnText.textContent = g.turn;
 
   invList.innerHTML = '';
@@ -70,14 +80,36 @@ function updateHud(g) {
   }
 }
 
+// Classe le message selon son contenu pour colorer le toast et le journal.
+function classifyLog(msg) {
+  if (msg.includes('Piège')) return EVENT.TRAP;
+  if (msg.includes('Rencontre')) return EVENT.MONSTER;
+  if (msg.includes('Trésor')) return EVENT.TREASURE;
+  if (msg.includes('Minotaure') || msg.includes('mort')) return 'danger';
+  return '';
+}
+
 function addLog(msg) {
-  const p = document.createElement('div');
-  p.className = 'log-line';
-  p.textContent = msg;
-  logEl.appendChild(p);
-  // Conserve les 40 dernières lignes.
-  while (logEl.children.length > 40) logEl.removeChild(logEl.firstChild);
-  logEl.scrollTop = logEl.scrollHeight;
+  // Journal complet (historique).
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.textContent = msg;
+  logEl.insertBefore(line, logEl.firstChild); // plus récent en haut
+  while (logEl.children.length > 60) logEl.removeChild(logEl.lastChild);
+
+  // Toast éphémère sur la vue principale.
+  showToast(msg, classifyLog(msg));
+}
+
+function showToast(msg, kind) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (kind ? ' ' + kind : '');
+  t.textContent = msg;
+  toastsEl.appendChild(t);
+  // Retire après la fin de l'animation de sortie.
+  setTimeout(() => t.remove(), 3100);
+  // Ne garde que les 3 derniers toasts affichés.
+  while (toastsEl.children.length > 3) toastsEl.firstChild.remove();
 }
 
 function flashDetection() {
@@ -99,68 +131,113 @@ overlayBtn.addEventListener('click', () => {
   overlay.classList.remove('visible');
   logEl.innerHTML = '';
   if (overlay.dataset.won === '1') {
-    // Victoire : on génère un nouveau labyrinthe.
     currentSeed = randomSeed();
     seedInput.value = currentSeed;
     game.load(currentSeed);
     seedLabel.textContent = game.seed;
   } else {
-    // Défaite : on recommence le même niveau.
     game.restart();
   }
 });
 
-// --- Contrôles clavier ---
+// ---------- Tiroir (inventaire / journal / menu) ----------
+const PANEL_TITLES = { inventory: 'Inventaire', journal: 'Journal des événements', menu: 'Menu' };
+let openPanel = null;
+
+function showPanel(name) {
+  openPanel = name;
+  drawerTitle.textContent = PANEL_TITLES[name] || '';
+  drawer.querySelectorAll('[data-panel-content]').forEach((el) => {
+    el.hidden = el.dataset.panelContent !== name;
+  });
+  drawer.classList.add('open');
+  scrim.classList.add('visible');
+  document.querySelectorAll('[data-panel]').forEach((b) =>
+    b.classList.toggle('active', b.dataset.panel === name)
+  );
+}
+
+function closePanel() {
+  openPanel = null;
+  drawer.classList.remove('open');
+  scrim.classList.remove('visible');
+  document.querySelectorAll('[data-panel]').forEach((b) => b.classList.remove('active'));
+}
+
+document.querySelectorAll('[data-panel]').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (openPanel === btn.dataset.panel) closePanel();
+    else showPanel(btn.dataset.panel);
+  });
+});
+$('drawer-close').addEventListener('click', closePanel);
+scrim.addEventListener('click', closePanel);
+
+// ---------- Contrôles clavier ----------
 const KEY_DIRS = {
-  ArrowUp: 'up',
-  ArrowDown: 'down',
-  ArrowLeft: 'left',
-  ArrowRight: 'right',
-  w: 'up',
-  s: 'down',
-  a: 'left',
-  d: 'right',
-  z: 'up', // clavier AZERTY
-  q: 'left',
+  ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
+  w: 'up', s: 'down', a: 'left', d: 'right',
+  z: 'up', q: 'left', // AZERTY
 };
 window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && openPanel) { closePanel(); return; }
+  if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); game.wait(); return; }
   const dir = KEY_DIRS[e.key];
-  if (dir) {
-    e.preventDefault();
-    game.move(dir);
-  }
+  if (dir) { e.preventDefault(); game.move(dir); }
 });
 
-// --- Contrôles tactiles (croix directionnelle) ---
-document.querySelectorAll('[data-dir]').forEach((btn) => {
-  const handler = (e) => {
+// ---------- Contrôles tactiles avec répétition au maintien ----------
+// Chaque bouton déclenche l'action au contact, puis la répète tant qu'on
+// maintient le doigt appuyé (confort de jeu sur mobile).
+function bindHold(el, action) {
+  let timer = null;
+  let repeat = null;
+  const start = (e) => {
     e.preventDefault();
-    game.move(btn.dataset.dir);
+    if (game.over) return;
+    action();
+    // Délai avant répétition, puis cadence régulière.
+    timer = setTimeout(() => {
+      repeat = setInterval(action, 150);
+    }, 320);
   };
-  btn.addEventListener('click', handler);
-});
+  const stop = () => {
+    clearTimeout(timer);
+    clearInterval(repeat);
+    timer = repeat = null;
+  };
+  el.addEventListener('pointerdown', start);
+  el.addEventListener('pointerup', stop);
+  el.addEventListener('pointerleave', stop);
+  el.addEventListener('pointercancel', stop);
+  // Évite le menu contextuel sur appui long mobile.
+  el.addEventListener('contextmenu', (e) => e.preventDefault());
+}
 
-// --- Boutons de la barre d'outils ---
-document.getElementById('new-seed-btn').addEventListener('click', () => {
-  currentSeed = seedInput.value.trim() || randomSeed();
-  seedInput.value = currentSeed;
-  logEl.innerHTML = '';
-  overlay.classList.remove('visible');
-  game.load(currentSeed);
-  seedLabel.textContent = game.seed;
+document.querySelectorAll('[data-dir]').forEach((btn) => {
+  bindHold(btn, () => game.move(btn.dataset.dir));
 });
-document.getElementById('random-seed-btn').addEventListener('click', () => {
-  currentSeed = randomSeed();
-  seedInput.value = currentSeed;
+bindHold($('wait-btn'), () => game.wait());
+
+// ---------- Menu : seed et parties ----------
+function reloadWith(seed) {
+  currentSeed = seed;
+  seedInput.value = seed;
   logEl.innerHTML = '';
+  toastsEl.innerHTML = '';
   overlay.classList.remove('visible');
-  game.load(currentSeed);
+  game.load(seed);
   seedLabel.textContent = game.seed;
-});
-document.getElementById('restart-btn').addEventListener('click', () => {
+  closePanel();
+}
+$('new-seed-btn').addEventListener('click', () => reloadWith(seedInput.value.trim() || randomSeed()));
+$('random-seed-btn').addEventListener('click', () => reloadWith(randomSeed()));
+$('restart-btn').addEventListener('click', () => {
   logEl.innerHTML = '';
+  toastsEl.innerHTML = '';
   overlay.classList.remove('visible');
   game.restart();
+  closePanel();
 });
 
 function randomSeed() {
@@ -169,11 +246,9 @@ function randomSeed() {
   return `${w}-${Math.floor(Math.random() * 100000)}`;
 }
 
-// --- Enregistrement du service worker (PWA) ---
-if ('serviceWorker' in navigator) {
+// ---------- Service worker (PWA) ----------
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
-      /* mode hors-ligne indisponible si le SW ne s'enregistre pas */
-    });
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 }

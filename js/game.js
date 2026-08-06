@@ -117,6 +117,17 @@ export class Game {
     this.emit('update');
   }
 
+  // Action « Attendre » : passe un tour sans bouger.
+  // Le Minotaure, lui, se déplace : utile tactiquement (le laisser passer,
+  // guetter, etc.). Sert de bouton d'action principal sur mobile.
+  wait() {
+    if (this.over) return;
+    this.turn++;
+    this.emit('log', '⏳ Tu attends, aux aguets...');
+    this._minotaurTurn();
+    this.emit('update');
+  }
+
   // Révèle la case et ses voisines immédiates (petit champ de vision).
   _reveal(x, y) {
     for (let dy = -1; dy <= 1; dy++) {
