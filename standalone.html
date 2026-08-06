@@ -336,6 +336,135 @@ kbd {
   font-family: ui-monospace, monospace;
 }
 
+/* ---------- Modale de combat (style Pokémon) ---------- */
+#combat {
+  position: absolute;
+  inset: 0;
+  z-index: 14;
+  display: none;
+  flex-direction: column;
+  background: rgba(8, 8, 14, 0.92);
+  backdrop-filter: blur(3px);
+  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 12px)
+           calc(var(--safe-b) + 12px) calc(var(--safe-l) + 12px);
+}
+#combat.visible { display: flex; }
+
+/* Scène : dégradé « arène », ennemi en haut à droite, joueur en bas à gauche. */
+.combat-scene {
+  position: relative;
+  flex: 1;
+  min-height: 120px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(120% 90% at 80% 15%, rgba(181, 23, 158, 0.18), transparent 60%),
+    radial-gradient(120% 90% at 20% 85%, rgba(46, 196, 182, 0.16), transparent 60%),
+    linear-gradient(180deg, #201a2b, #14141d);
+  overflow: hidden;
+}
+
+.combatant {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 62%;
+}
+.combatant.enemy { top: 12px; right: 14px; }
+.combatant.player { bottom: 12px; left: 14px; }
+
+.cbt-sprite {
+  font-size: 52px;
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
+}
+.combatant.enemy .cbt-sprite { animation: bob 2.4s ease-in-out infinite; }
+.combatant.player .cbt-sprite { transform: scaleX(-1); }
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+/* Secousse quand un combattant est touché. */
+.cbt-sprite.hit { animation: shake 0.3s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.combatant.player .cbt-sprite.hit { animation: shake-flip 0.3s; }
+@keyframes shake-flip {
+  0%,100% { transform: scaleX(-1) translateX(0); }
+  25% { transform: scaleX(-1) translateX(-5px); }
+  75% { transform: scaleX(-1) translateX(5px); }
+}
+
+.cbt-info {
+  background: rgba(15, 15, 22, 0.85);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px 10px;
+  min-width: 128px;
+}
+.cbt-name { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.cbt-hp {
+  height: 9px;
+  background: #101018;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.cbt-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s; }
+.cbt-hp-fill.enemy { background: #e74c3c; }
+.cbt-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+.combat-log {
+  height: 74px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.combat-log .cl { opacity: 0.6; }
+.combat-log .cl:last-child { opacity: 1; color: var(--text); }
+
+.combat-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.combat-actions button {
+  padding: 13px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.1s, transform 0.05s, opacity 0.1s;
+}
+.combat-actions button .glyph { font-size: 17px; }
+.combat-actions button:active { transform: scale(0.96); background: #2e2e42; }
+#cbt-attack { border-color: rgba(231, 76, 60, 0.5); }
+#cbt-parry { border-color: rgba(52, 152, 219, 0.5); }
+#cbt-flee { border-color: rgba(241, 196, 15, 0.5); }
+.combat-actions button:disabled { opacity: 0.4; pointer-events: none; }
+
+/* Paysage court : on compacte la scène de combat. */
+@media (orientation: landscape) and (max-height: 480px) {
+  .cbt-sprite { font-size: 40px; }
+  .combat-log { height: 52px; }
+  .combat-actions button { padding: 10px 6px; }
+  .cbt-info { min-width: 108px; padding: 5px 8px; }
+}
+
 /* ---------- Overlay de fin ---------- */
 #overlay {
   position: absolute;
@@ -484,6 +613,37 @@ kbd {
       </div>
     </div>
     <div id="scrim"></div>
+
+    <!-- Modale de combat (style Pokémon : ennemi en haut à droite,
+         joueur en bas à gauche) -->
+    <div id="combat" aria-hidden="true">
+      <div class="combat-scene">
+        <!-- Ennemi : haut droite -->
+        <div class="combatant enemy">
+          <div class="cbt-info">
+            <span class="cbt-name" id="cbt-enemy-name">Monstre</span>
+            <div class="cbt-hp"><div class="cbt-hp-fill enemy" id="cbt-enemy-hp"></div></div>
+            <span class="cbt-hp-text" id="cbt-enemy-hp-text">0 / 0</span>
+          </div>
+          <div class="cbt-sprite" id="cbt-enemy-sprite">👹</div>
+        </div>
+        <!-- Joueur : bas gauche -->
+        <div class="combatant player">
+          <div class="cbt-sprite" id="cbt-player-sprite">🗡️</div>
+          <div class="cbt-info">
+            <span class="cbt-name">Aventurier</span>
+            <div class="cbt-hp"><div class="cbt-hp-fill" id="cbt-player-hp"></div></div>
+            <span class="cbt-hp-text" id="cbt-player-hp-text">0 / 0</span>
+          </div>
+        </div>
+      </div>
+      <div class="combat-log" id="combat-log"></div>
+      <div class="combat-actions">
+        <button id="cbt-attack"><span class="glyph">⚔️</span> Attaquer</button>
+        <button id="cbt-parry"><span class="glyph">🛡️</span> Parer</button>
+        <button id="cbt-flee"><span class="glyph">🏃</span> Fuir</button>
+      </div>
+    </div>
 
     <!-- Écran de fin (mort / victoire) -->
     <div id="overlay">
@@ -784,11 +944,13 @@ const TERRAIN_WEIGHTS = {
 
 // Contenu concret de chaque catégorie d'événement.
 // Le contenu précis (dégâts, butin) est lui aussi tiré de façon déterministe.
+// hp : points de vie du monstre en combat · dmg : dégâts par attaque
+// hit : probabilité que l'attaque du monstre touche · emoji : sprite de combat
 const MONSTERS = [
-  { name: 'Rat des cavernes', dmg: [1, 2] },
-  { name: 'Chauve-souris', dmg: [1, 3] },
-  { name: 'Squelette errant', dmg: [2, 4] },
-  { name: 'Araignée géante', dmg: [2, 5] },
+  { name: 'Rat des cavernes', hp: 4, dmg: [1, 2], hit: 0.7, emoji: '🐀' },
+  { name: 'Chauve-souris', hp: 4, dmg: [1, 3], hit: 0.78, emoji: '🦇' },
+  { name: 'Squelette errant', hp: 8, dmg: [2, 4], hit: 0.7, emoji: '💀' },
+  { name: 'Araignée géante', hp: 9, dmg: [2, 5], hit: 0.62, emoji: '🕷️' },
 ];
 
 const TRAPS = [
@@ -854,7 +1016,9 @@ function buildEventDetails(maze, x, y, type) {
   switch (type) {
     case EVENT.MONSTER: {
       const m = MONSTERS[pickIdx(MONSTERS)];
-      return { type, name: m.name, damage: range(m.dmg) };
+      // On transmet les stats de combat (les dégâts sont retirés à chaque
+      // attaque, pas ici, pour varier d'un coup à l'autre pendant le combat).
+      return { type, name: m.name, hp: m.hp, dmg: m.dmg, hit: m.hit, emoji: m.emoji };
     }
     case EVENT.TRAP: {
       const t = TRAPS[pickIdx(TRAPS)];
@@ -885,6 +1049,8 @@ class Player {
     this.gold = 0;
     // Inventaire simple : map nom d'objet -> quantité.
     this.inventory = new Map();
+    // Arme équipée par défaut : un glaive de base (3 dégâts par coup).
+    this.weapon = { name: 'Glaive', damage: 3, hitChance: 0.8 };
   }
 
   isAlive() {
@@ -921,6 +1087,115 @@ class Player {
     this.hp = this.maxHp;
     this.gold = 0;
     this.inventory.clear();
+    // On repart toujours avec le glaive de base.
+    this.weapon = { name: 'Glaive', damage: 3, hitChance: 0.8 };
+  }
+}
+
+
+// ===== combat.js =====
+// combat.js — Système de combat rudimentaire au tour par tour.
+//
+// Trois actions pour le joueur, aucune garantie à 100 % :
+//   - Attaquer : inflige les dégâts de l'arme si le coup touche.
+//   - Parer    : tente de bloquer la prochaine attaque ennemie.
+//   - Fuir     : tente de quitter le combat (le monstre, lui, ne peut pas fuir).
+//
+// Après chaque action du joueur (sauf fuite réussie), l'ennemi riposte, lui
+// aussi avec une probabilité de toucher. Le combat se termine quand l'ennemi
+// est vaincu (victoire), le joueur tombe à 0 PV (défaite), ou la fuite réussit.
+
+class Combat {
+  constructor(player, enemy, rng) {
+    this.player = player; // référence au Player (hp, weapon)
+    this.enemy = enemy;   // { name, hp, maxHp, dmg:[min,max], hitChance, emoji }
+    this.rng = rng;
+    this.over = false;
+    this.result = null;   // 'win' | 'lose' | 'flee'
+    this.round = 1;
+    this.log = [];
+
+    // Probabilités de réussite des actions du joueur.
+    this.parryChance = 0.6; // chance de parer avec succès
+    this.fleeChance = 0.5;  // chance de fuir avec succès
+  }
+
+  _say(msg) {
+    this.log.push(msg);
+  }
+
+  // --- Action : attaquer ---
+  attack() {
+    if (this.over) return;
+    const w = this.player.weapon;
+    if (this.rng.chance(w.hitChance)) {
+      this.enemy.hp = Math.max(0, this.enemy.hp - w.damage);
+      this._say(`⚔️ Tu frappes ${this.enemy.name} avec ton ${w.name} : -${w.damage} PV.`);
+    } else {
+      this._say(`💨 Tu attaques, mais ${this.enemy.name} esquive !`);
+    }
+    if (this._checkEnemyDefeated()) return;
+    this._enemyTurn(false);
+  }
+
+  // --- Action : parer ---
+  parry() {
+    if (this.over) return;
+    const success = this.rng.chance(this.parryChance);
+    if (success) this._say('🛡️ Tu te mets en garde, prêt à parer.');
+    else this._say('😖 Ta garde est mal assurée...');
+    // L'ennemi attaque : si la parade a réussi, le coup est bloqué.
+    this._enemyTurn(success);
+  }
+
+  // --- Action : fuir ---
+  flee() {
+    if (this.over) return;
+    if (this.rng.chance(this.fleeChance)) {
+      this._say(`🏃 Tu parviens à fuir ${this.enemy.name} !`);
+      this.over = true;
+      this.result = 'flee';
+      return;
+    }
+    this._say('❌ Fuite ratée ! Le monstre en profite.');
+    this._enemyTurn(false);
+  }
+
+  // Tour de l'ennemi. `blocked` = true si la parade du joueur a réussi.
+  _enemyTurn(blocked) {
+    if (this.over) return;
+    if (this.rng.chance(this.enemy.hitChance)) {
+      const raw = this.rng.int(this.enemy.dmg[0], this.enemy.dmg[1]);
+      if (blocked) {
+        this._say(`🛡️ Tu pares l'attaque de ${this.enemy.name} ! Aucun dégât.`);
+      } else {
+        this.player.damage(raw);
+        this._say(`🩸 ${this.enemy.name} te touche : -${raw} PV.`);
+      }
+    } else {
+      this._say(`✨ ${this.enemy.name} attaque, mais te manque !`);
+    }
+    this.round++;
+    this._checkPlayerDefeated();
+  }
+
+  _checkEnemyDefeated() {
+    if (this.enemy.hp <= 0) {
+      this._say(`🏆 ${this.enemy.name} est vaincu !`);
+      this.over = true;
+      this.result = 'win';
+      return true;
+    }
+    return false;
+  }
+
+  _checkPlayerDefeated() {
+    if (this.player.hp <= 0) {
+      this.over = true;
+      this.result = 'lose';
+      return true;
+    }
+    return false;
   }
 }
 
@@ -1207,6 +1482,12 @@ class Game {
     this.won = false;
     this.mazeShifted = false;
 
+    // État de combat (modale interactive).
+    this.inCombat = false;
+    this.combat = null;
+    this._combatCell = null;   // case où se déroule le combat
+    this._combatReturn = null; // case de repli en cas de fuite réussie
+
     this._reveal(this.player.x, this.player.y);
     this._resolveEvent(this.player.x, this.player.y, true); // entrée = sûre
     this.emit('log', `Bienvenue dans le labyrinthe (seed : ${this.seed}). Trouve la sortie ⚑ !`);
@@ -1243,7 +1524,7 @@ class Game {
 
   // Déplacement du joueur d'une case. dir ∈ {up,down,left,right}.
   move(dir) {
-    if (this.over) return;
+    if (this.over || this.inCombat) return;
     const deltas = {
       up: { dx: 0, dy: -1 },
       down: { dx: 0, dy: 1 },
@@ -1260,13 +1541,21 @@ class Game {
       return; // mur : déplacement impossible
     }
 
+    // Case d'où l'on vient (repli en cas de fuite d'un combat).
+    this._combatReturn = { x: this.player.x, y: this.player.y };
+
     this.player.x = nx;
     this.player.y = ny;
     this.turn++;
     this._reveal(nx, ny);
 
-    // Résout l'événement de la case d'arrivée.
+    // Résout l'événement de la case d'arrivée. Peut déclencher un combat :
+    // dans ce cas le « monde » se met en pause (le Minotaure attend la fin).
     this._resolveEvent(nx, ny);
+    if (this.inCombat) {
+      this.emit('update');
+      return;
+    }
 
     // Victoire : atteinte de la sortie.
     if (nx === this.maze.exit.x && ny === this.maze.exit.y && !this.over) {
@@ -1288,11 +1577,83 @@ class Game {
   // Le Minotaure, lui, se déplace : utile tactiquement (le laisser passer,
   // guetter, etc.). Sert de bouton d'action principal sur mobile.
   wait() {
-    if (this.over) return;
+    if (this.over || this.inCombat) return;
     this.turn++;
     this.emit('log', '⏳ Tu attends, aux aguets...');
     this._minotaurTurn();
     this.emit('update');
+  }
+
+  // ---------- Combat (modale interactive) ----------
+
+  // Démarre un combat contre le monstre de la case (x, y).
+  _startCombat(ev, x, y) {
+    this.inCombat = true;
+    this._combatCell = { x, y };
+    const enemy = {
+      name: ev.name,
+      emoji: ev.emoji,
+      maxHp: ev.hp,
+      hp: ev.hp,
+      dmg: ev.dmg,
+      hitChance: ev.hit,
+    };
+    this.combat = new Combat(this.player, enemy, this.rng);
+    this.emit('log', `⚔️ Un ${ev.name} surgit !`);
+    this.emit('combat-start', this.combat);
+  }
+
+  // Actions déclenchées par l'interface pendant un combat.
+  combatAttack() { this._combatAction('attack'); }
+  combatParry() { this._combatAction('parry'); }
+  combatFlee() { this._combatAction('flee'); }
+
+  _combatAction(kind) {
+    if (!this.inCombat || !this.combat || this.combat.over) return;
+    const c = this.combat;
+    if (kind === 'attack') c.attack();
+    else if (kind === 'parry') c.parry();
+    else if (kind === 'flee') c.flee();
+
+    this.emit('combat-update', c);
+    if (c.over) this._endCombat(c);
+  }
+
+  // Applique les conséquences de la fin du combat, puis relance le « monde ».
+  _endCombat(c) {
+    this.inCombat = false;
+    const cell = this._combatCell;
+    const key = `${cell.x},${cell.y}`;
+
+    if (c.result === 'win') {
+      // Le monstre disparaît : on retire son marqueur, la case reste résolue.
+      this.revealedEvents.delete(key);
+      const loot = this.rng.int(2, 6);
+      this.player.addGold(loot);
+      this.emit('log', `🏆 ${c.enemy.name} vaincu ! Tu récupères ${loot} or.`);
+      this._resumeWorld();
+    } else if (c.result === 'flee') {
+      // On autorise un futur combat sur cette case et on recule d'une case.
+      this.resolvedCells.delete(key);
+      if (this._combatReturn) {
+        this.player.x = this._combatReturn.x;
+        this.player.y = this._combatReturn.y;
+      }
+      this._resumeWorld();
+    } else if (c.result === 'lose') {
+      this.emit('log', `💀 ${c.enemy.name} a eu raison de toi...`);
+      this._checkDeath();
+    }
+
+    this.combat = null;
+    this._combatCell = null;
+    this.emit('combat-end', c);
+    this.emit('update');
+  }
+
+  // Le Minotaure joue le tour mis en pause pendant le combat.
+  _resumeWorld() {
+    if (!this.over) this._minotaurTurn();
   }
 
   // Révèle la case et ses voisines immédiates (petit champ de vision).
@@ -1323,9 +1684,9 @@ class Game {
         break;
       }
       case EVENT.MONSTER: {
-        this.player.damage(ev.damage);
-        this.emit('log', `⚔️ Rencontre : ${ev.name} t'inflige ${ev.damage} PV de dégâts.`);
-        break;
+        // Une rencontre déclenche un combat en modale (au lieu de dégâts secs).
+        this._startCombat(ev, x, y);
+        return; // le combat prend le relais ; on ne vérifie pas la mort ici
       }
       case EVENT.TREASURE: {
         this.player.addItem(ev.item);
@@ -1410,6 +1771,21 @@ const drawer = $('drawer');
 const drawerTitle = $('drawer-title');
 const scrim = $('scrim');
 
+// Éléments de la modale de combat.
+const combatEl = $('combat');
+const combatLog = $('combat-log');
+const cbtEnemyName = $('cbt-enemy-name');
+const cbtEnemySprite = $('cbt-enemy-sprite');
+const cbtEnemyHp = $('cbt-enemy-hp');
+const cbtEnemyHpText = $('cbt-enemy-hp-text');
+const cbtPlayerHp = $('cbt-player-hp');
+const cbtPlayerHpText = $('cbt-player-hp-text');
+const cbtBtns = {
+  attack: $('cbt-attack'),
+  parry: $('cbt-parry'),
+  flee: $('cbt-flee'),
+};
+
 // Seed initiale : ?seed=... dans l'URL, sinon aléatoire.
 const urlSeed = new URLSearchParams(location.search).get('seed');
 let currentSeed = urlSeed || randomSeed();
@@ -1432,6 +1808,9 @@ function wireGame(g) {
   g.on('update', () => updateHud(g));
   g.on('detected', () => flashDetection());
   g.on('gameover', ({ won }) => showOverlay(g, won));
+  g.on('combat-start', (c) => openCombat(c));
+  g.on('combat-update', (c) => renderCombat(c, true));
+  g.on('combat-end', (c) => endCombat(c));
   updateHud(g);
 }
 
@@ -1499,6 +1878,8 @@ function flashDetection() {
 }
 
 function showOverlay(g, won) {
+  // La modale de combat cède la place à l'écran de fin.
+  combatEl.classList.remove('visible');
   overlayTitle.textContent = won ? 'Niveau terminé 🎉' : 'Game Over 💀';
   overlayText.textContent = won
     ? `Sortie atteinte en ${g.turn} tours avec ${g.player.gold} or.`
@@ -1507,6 +1888,77 @@ function showOverlay(g, won) {
   overlay.dataset.won = won ? '1' : '0';
   overlay.classList.add('visible');
 }
+
+// ---------- Modale de combat ----------
+let combatClosing = null;
+
+function openCombat(c) {
+  clearTimeout(combatClosing);
+  cbtEnemyName.textContent = c.enemy.name;
+  cbtEnemySprite.textContent = c.enemy.emoji || '👹';
+  combatLog.innerHTML = '';
+  setActionsDisabled(false);
+  renderCombat(c, false);
+  combatEl.classList.add('visible');
+  combatEl.setAttribute('aria-hidden', 'false');
+}
+
+function renderCombat(c, animate) {
+  const p = game.player;
+  const ePct = Math.max(0, (c.enemy.hp / c.enemy.maxHp) * 100);
+  const pPct = Math.max(0, (p.hp / p.maxHp) * 100);
+  cbtEnemyHp.style.width = ePct + '%';
+  cbtPlayerHp.style.width = pPct + '%';
+  cbtEnemyHpText.textContent = `${c.enemy.hp} / ${c.enemy.maxHp}`;
+  cbtPlayerHpText.textContent = `${p.hp} / ${p.maxHp}`;
+
+  // Journal du combat (on affiche l'historique complet du combat en cours).
+  combatLog.innerHTML = '';
+  for (const line of c.log) {
+    const div = document.createElement('div');
+    div.className = 'cl';
+    div.textContent = line;
+    combatLog.appendChild(div);
+  }
+  combatLog.scrollTop = combatLog.scrollHeight;
+
+  if (animate) {
+    // Petite secousse sur le dernier combattant touché.
+    const last = c.log[c.log.length - 1] || '';
+    if (last.includes('te touche') || last.includes('pares')) bump(cbtPlayerSprite());
+    if (last.includes('Tu frappes')) bump(cbtEnemySprite);
+  }
+}
+
+function cbtPlayerSprite() { return $('cbt-player-sprite'); }
+
+function bump(el) {
+  if (!el) return;
+  el.classList.remove('hit');
+  // Force le reflow pour rejouer l'animation.
+  void el.offsetWidth;
+  el.classList.add('hit');
+}
+
+function endCombat(c) {
+  setActionsDisabled(true);
+  // On laisse le temps de lire l'issue avant de fermer la modale.
+  const delay = c.result === 'lose' ? 500 : 950;
+  combatClosing = setTimeout(() => {
+    combatEl.classList.remove('visible');
+    combatEl.setAttribute('aria-hidden', 'true');
+  }, delay);
+}
+
+function setActionsDisabled(v) {
+  cbtBtns.attack.disabled = v;
+  cbtBtns.parry.disabled = v;
+  cbtBtns.flee.disabled = v;
+}
+
+cbtBtns.attack.addEventListener('click', () => game.combatAttack());
+cbtBtns.parry.addEventListener('click', () => game.combatParry());
+cbtBtns.flee.addEventListener('click', () => game.combatFlee());
 
 overlayBtn.addEventListener('click', () => {
   overlay.classList.remove('visible');

@@ -32,11 +32,13 @@ const TERRAIN_WEIGHTS = {
 
 // Contenu concret de chaque catégorie d'événement.
 // Le contenu précis (dégâts, butin) est lui aussi tiré de façon déterministe.
+// hp : points de vie du monstre en combat · dmg : dégâts par attaque
+// hit : probabilité que l'attaque du monstre touche · emoji : sprite de combat
 const MONSTERS = [
-  { name: 'Rat des cavernes', dmg: [1, 2] },
-  { name: 'Chauve-souris', dmg: [1, 3] },
-  { name: 'Squelette errant', dmg: [2, 4] },
-  { name: 'Araignée géante', dmg: [2, 5] },
+  { name: 'Rat des cavernes', hp: 4, dmg: [1, 2], hit: 0.7, emoji: '🐀' },
+  { name: 'Chauve-souris', hp: 4, dmg: [1, 3], hit: 0.78, emoji: '🦇' },
+  { name: 'Squelette errant', hp: 8, dmg: [2, 4], hit: 0.7, emoji: '💀' },
+  { name: 'Araignée géante', hp: 9, dmg: [2, 5], hit: 0.62, emoji: '🕷️' },
 ];
 
 const TRAPS = [
@@ -102,7 +104,9 @@ function buildEventDetails(maze, x, y, type) {
   switch (type) {
     case EVENT.MONSTER: {
       const m = MONSTERS[pickIdx(MONSTERS)];
-      return { type, name: m.name, damage: range(m.dmg) };
+      // On transmet les stats de combat (les dégâts sont retirés à chaque
+      // attaque, pas ici, pour varier d'un coup à l'autre pendant le combat).
+      return { type, name: m.name, hp: m.hp, dmg: m.dmg, hit: m.hit, emoji: m.emoji };
     }
     case EVENT.TRAP: {
       const t = TRAPS[pickIdx(TRAPS)];

@@ -13,8 +13,14 @@ hors-ligne.
 - 🎲 **Événements par case** déterminés par l'aléatoire **et** le type de sol de
   la case **et des 9 cases alentours** :
   - ⚠️ **Pièges** (dégâts),
-  - ⚔️ **Rencontres de monstres** (dégâts),
+  - ⚔️ **Rencontres de monstres** → **combat** (voir ci-dessous),
   - 💰 **Trésors** (or, objets, potions de soin).
+- ⚔️ **Combat en modale** (style Pokémon : ennemi en haut à droite, joueur en
+  bas à gauche). Le joueur possède par défaut un **glaive** (3 dégâts/coup) et
+  dispose de trois actions, aucune garantie à 100 % :
+  - **Attaquer** (80 % de toucher), **Parer** (60 % de bloquer l'attaque),
+    **Fuir** (50 % de réussite). Le monstre riposte selon sa propre précision et
+    ne peut pas fuir. Victoire = butin en or ; défaite à 0 PV = niveau recommencé.
 - 🕹️ **Déplacement case par case** (flèches, ZQSD, WASD, ou croix tactile).
 - ❤️ **Points de vie** : à 0, l'aventurier meurt et le niveau recommence.
 - 🐂 **Minotaure** mobile : il patrouille, détecte le joueur dans un rayon donné,
@@ -81,7 +87,8 @@ js/
   rng.js       PRNG déterministe seedé (mulberry32 + hash)
   maze.js      Génération du labyrinthe et des terrains
   events.js    Détermination des événements (sol + 9 voisins + aléa)
-  player.js    Aventurier : PV, or, inventaire
+  player.js    Aventurier : PV, or, inventaire, arme
+  combat.js    Combat au tour par tour (attaquer / parer / fuir)
   minotaur.js  IA du Minotaure (patrouille / détection / poursuite)
   render.js    Rendu canvas topdown avec caméra et brouillard
   game.js      Contrôleur : tours, événements, mort/relance
