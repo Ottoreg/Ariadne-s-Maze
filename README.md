@@ -43,15 +43,28 @@ python3 -m http.server 8000
 ```
 
 Pour rejouer un labyrinthe précis : `http://localhost:8000/?seed=ma-seed`, ou
-saisir la seed dans la barre du haut puis **Générer**.
+saisir la seed dans le **menu** (⚙️) puis **Générer**.
+
+## Interface
+
+Pensée pour le **mobile en mode paysage** : la vue principale est occupée par le
+labyrinthe plein écran, le HUD est en surimpression.
+
+- **Bas gauche** : croix directionnelle (déplacement, avec répétition au maintien).
+- **Bas droite** : bouton d'action **Attendre** (passe un tour ; le Minotaure
+  bouge — utile tactiquement).
+- **Haut gauche** : points de vie, or, tours, seed.
+- **Haut droite** : 🎒 inventaire · 📜 journal des événements · ⚙️ menu (seed,
+  recommencer, légende) — s'ouvrent en tiroir latéral.
+- Les événements s'affichent en **toasts** éphémères sur la vue principale.
 
 ## Commandes
 
-| Action              | Touches                              |
-| ------------------- | ------------------------------------ |
-| Se déplacer         | Flèches · `ZQSD` · `WASD` · croix tactile |
-| Nouvelle seed       | 🎲 (aléatoire) ou champ *Seed* + **Générer** |
-| Recommencer         | ↻                                    |
+| Action        | Tactile                     | Clavier                          |
+| ------------- | --------------------------- | -------------------------------- |
+| Se déplacer   | Croix (bas gauche)          | Flèches · `ZQSD` · `WASD`        |
+| Attendre      | Bouton **Attendre**         | `Espace`                         |
+| Panneaux      | 🎒 · 📜 · ⚙️ (haut droite)  | `Échap` pour fermer              |
 
 Objectif : atteindre la sortie **⚑** en survivant aux pièges, aux monstres et au
 Minotaure.
