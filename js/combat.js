@@ -73,8 +73,15 @@ export class Combat {
       if (blocked) {
         this._say(`🛡️ Tu pares l'attaque de ${this.enemy.name} ! Aucun dégât.`);
       } else {
-        this.player.damage(raw);
-        this._say(`🩸 ${this.enemy.name} te touche : -${raw} PV.`);
+        // player.damage() applique la mitigation de l'armure.
+        const dealt = this.player.damage(raw);
+        if (dealt <= 0) {
+          this._say(`🧥 Ton armure encaisse l'attaque de ${this.enemy.name} !`);
+        } else {
+          const absorbed = raw - dealt;
+          const suffix = absorbed > 0 ? ` (armure -${absorbed})` : '';
+          this._say(`🩸 ${this.enemy.name} te touche : -${dealt} PV${suffix}.`);
+        }
       }
     } else {
       this._say(`✨ ${this.enemy.name} attaque, mais te manque !`);

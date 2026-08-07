@@ -3,7 +3,7 @@
 // les points de vie, la mort/relance de niveau et l'inventaire.
 
 import { Maze, TILE } from './maze.js';
-import { Player } from './player.js';
+import { Player, CONSUMABLES } from './player.js';
 import { Minotaur } from './minotaur.js';
 import { computeEvent, EVENT } from './events.js';
 import { Combat } from './combat.js';
@@ -238,8 +238,10 @@ export class Game {
 
     switch (ev.type) {
       case EVENT.TRAP: {
-        this.player.damage(ev.damage);
-        this.emit('log', `⚠️ Piège : ${ev.name} ! Tu perds ${ev.damage} PV.`);
+        const dealt = this.player.damage(ev.damage);
+        const absorbed = ev.damage - dealt;
+        const suffix = absorbed > 0 ? ` (armure -${absorbed})` : '';
+        this.emit('log', `⚠️ Piège : ${ev.name} ! Tu perds ${dealt} PV${suffix}.`);
         break;
       }
       case EVENT.MONSTER: {
@@ -254,10 +256,8 @@ export class Game {
           this.player.addGold(ev.gold);
           msg += ` (+${ev.gold} or)`;
         }
-        if (ev.heal) {
-          this.player.heal(ev.heal);
-          msg += ` (+${ev.heal} PV)`;
-        }
+        // Les potions ne se boivent plus automatiquement : elles vont dans le
+        // sac et se consomment depuis l'inventaire (voir useItem).
         this.emit('log', msg + ' !');
         break;
       }
@@ -278,10 +278,31 @@ export class Game {
     if (res.contact) {
       const [min, max] = this.minotaur.contactDamage;
       const dmg = this.rng.int(min, max);
-      this.player.damage(dmg);
-      this.emit('log', `🐂 Le Minotaure te charge ! Tu perds ${dmg} PV.`);
+      const dealt = this.player.damage(dmg);
+      const absorbed = dmg - dealt;
+      const suffix = absorbed > 0 ? ` (armure -${absorbed})` : '';
+      this.emit('log', `🐂 Le Minotaure te charge ! Tu perds ${dealt} PV${suffix}.`);
       this._checkDeath();
     }
+  }
+
+  // Utilise un objet consommable de l'inventaire (potion de soin).
+  // Action de menu : n'avance pas le tour du monde.
+  useItem(name) {
+    if (this.over || this.inCombat) return;
+    const def = CONSUMABLES[name];
+    if (!def || !this.player.inventory.get(name)) return;
+    if (this.player.hp >= this.player.maxHp) {
+      this.emit('log', 'Tes PV sont déjà au maximum.');
+      this.emit('update');
+      return;
+    }
+    const before = this.player.hp;
+    this.player.heal(def.heal);
+    this.player.removeItem(name);
+    const gained = this.player.hp - before;
+    this.emit('log', `🧪 Tu bois une ${name} (+${gained} PV).`);
+    this.emit('update');
   }
 
   // Crochet déclenché à la toute première détection par le Minotaure.
