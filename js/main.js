@@ -4,7 +4,7 @@
 import { Game } from './game.js';
 import { Renderer } from './render.js';
 import { EVENT } from './events.js';
-import { CONSUMABLES } from './player.js';
+import { itemDef } from './player.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,8 +16,13 @@ const hpFill = $('hp-fill');
 const hpText = $('hp-text');
 const goldText = $('gold-text');
 const goldText2 = $('gold-text-2');
+const armorText = $('armor-text');
 const turnText = $('turn-text');
-const invList = $('inventory-list');
+const equipList = $('equip-list');
+const bagList = $('bag-list');
+const bagCount = $('bag-count');
+const groundSection = $('ground-section');
+const groundList = $('ground-list');
 const logEl = $('log');
 const toastsEl = $('toasts');
 const seedInput = $('seed-input');
@@ -81,58 +86,130 @@ function updateHud(g) {
   hpText.textContent = `${p.hp} / ${p.maxHp}`;
   goldText.textContent = p.gold;
   if (goldText2) goldText2.textContent = p.gold;
+  if (armorText) armorText.textContent = p.armorValue();
   turnText.textContent = g.turn;
 
   renderEquipment(p);
   renderBag(p);
+  renderGround(g);
 }
 
-// Affiche l'arme et l'armure équipées (emplacements façon Diablo).
+// Fabrique le bloc principal (icône + textes) d'un objet/emplacement.
+function slotMain(emoji, label, name, stat) {
+  const main = document.createElement('div');
+  main.className = 'slot-main';
+  const icon = document.createElement('span');
+  icon.className = 'slot-icon';
+  icon.textContent = emoji;
+  const text = document.createElement('div');
+  text.className = 'slot-text';
+  if (label) {
+    const l = document.createElement('span');
+    l.className = 'slot-label';
+    l.textContent = label;
+    text.appendChild(l);
+  }
+  const n = document.createElement('span');
+  n.className = 'slot-name';
+  n.innerHTML = name;
+  text.appendChild(n);
+  if (stat) {
+    const s = document.createElement('span');
+    s.className = 'slot-stat';
+    s.textContent = stat;
+    text.appendChild(s);
+  }
+  main.appendChild(icon);
+  main.appendChild(text);
+  return main;
+}
+
+function actionBtn(label, cls, onClick) {
+  const b = document.createElement('button');
+  if (cls) b.className = cls;
+  b.textContent = label;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function statOf(def) {
+  if (!def) return '';
+  if (def.damage) return `${def.damage} dégâts`;
+  if (def.armor) return `${def.armor} armure`;
+  if (def.heal) return `soigne ${def.heal}`;
+  return '';
+}
+
+// Les 5 emplacements d'équipement (bouton « Retirer » si occupé).
 function renderEquipment(p) {
-  const w = p.weapon;
-  const a = p.armor;
-  const setSlot = (id, gear, statText) => {
-    const el = $(id);
-    if (!el) return;
-    el.querySelector('.equip-icon').textContent = gear ? gear.emoji || '⬚' : '⬚';
-    el.querySelector('.equip-name').textContent = gear ? gear.name : '—';
-    el.querySelector('.equip-stat').textContent = gear ? statText : '';
-  };
-  setSlot('equip-weapon', w, w ? `${w.damage} dégâts` : '');
-  setSlot('equip-armor', a, a ? `${a.armor} armure` : '');
+  equipList.innerHTML = '';
+  for (const slot of p.equippedList()) {
+    const li = document.createElement('li');
+    li.className = 'slot' + (slot.name ? '' : ' empty');
+    const emoji = slot.def ? slot.def.emoji : slot.emoji;
+    li.appendChild(slotMain(emoji, slot.label, slot.name || 'vide', statOf(slot.def)));
+    if (slot.name) {
+      const actions = document.createElement('div');
+      actions.className = 'slot-actions';
+      actions.appendChild(actionBtn('Retirer', 'danger', () => game.unequipItem(slot.key)));
+      li.appendChild(actions);
+    }
+    equipList.appendChild(li);
+  }
 }
 
-// Affiche le sac ; les consommables reçoivent un bouton « Boire ».
+// Le sac (5 places) : boutons Équiper / Boire / Jeter selon le type d'objet.
 function renderBag(p) {
-  invList.innerHTML = '';
+  bagList.innerHTML = '';
+  if (bagCount) bagCount.textContent = p.bag.length;
   const items = p.items();
   if (items.length === 0) {
     const li = document.createElement('li');
-    li.className = 'empty';
-    li.textContent = 'Sac vide';
-    invList.appendChild(li);
+    li.className = 'slot empty';
+    li.appendChild(slotMain('🎒', '', 'Sac vide', ''));
+    bagList.appendChild(li);
     return;
   }
   for (const it of items) {
     const li = document.createElement('li');
-    const label = document.createElement('span');
-    label.className = 'item-name';
-    label.textContent = it.name;
-    li.appendChild(label);
-    if (it.qty > 1) {
-      const qty = document.createElement('span');
-      qty.className = 'item-qty';
-      qty.textContent = `×${it.qty}`;
-      li.appendChild(qty);
+    li.className = 'slot';
+    const nameHtml = it.qty > 1 ? `${it.name} <span class="qty">×${it.qty}</span>` : it.name;
+    li.appendChild(slotMain(it.def.emoji, '', nameHtml, statOf(it.def)));
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+    if (it.def.kind === 'equip') {
+      actions.appendChild(actionBtn('Équiper', 'primary', () => game.equipItem(it.index)));
     }
-    if (CONSUMABLES[it.name]) {
-      const btn = document.createElement('button');
-      btn.className = 'item-use';
-      btn.textContent = 'Boire';
-      btn.addEventListener('click', () => game.useItem(it.name));
-      li.appendChild(btn);
+    if (it.def.kind === 'consumable' && it.def.heal) {
+      actions.appendChild(actionBtn('Boire', 'primary', () => game.useItem(it.index)));
     }
-    invList.appendChild(li);
+    actions.appendChild(actionBtn('Jeter', 'danger', () => game.dropItem(it.index)));
+    li.appendChild(actions);
+    bagList.appendChild(li);
+  }
+}
+
+// Objets posés au sol sur la case actuelle (bouton « Ramasser »).
+function renderGround(g) {
+  const ground = g.groundHere();
+  if (!ground.length) {
+    groundSection.hidden = true;
+    groundList.innerHTML = '';
+    return;
+  }
+  groundSection.hidden = false;
+  groundList.innerHTML = '';
+  for (const it of ground) {
+    const def = itemDef(it.name);
+    const li = document.createElement('li');
+    li.className = 'slot';
+    const nameHtml = it.qty > 1 ? `${it.name} <span class="qty">×${it.qty}</span>` : it.name;
+    li.appendChild(slotMain(def.emoji, '', nameHtml, statOf(def)));
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+    actions.appendChild(actionBtn('Ramasser', 'primary', () => game.pickUp(it.name)));
+    li.appendChild(actions);
+    groundList.appendChild(li);
   }
 }
 

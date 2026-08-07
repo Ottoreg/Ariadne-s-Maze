@@ -254,7 +254,7 @@ body.alert { background: #3a0f12; }
   top: 0;
   right: 0;
   height: 100%;
-  width: min(360px, 86vw);
+  width: min(480px, 94vw);
   background: var(--panel);
   border-left: 1px solid var(--border);
   transform: translateX(100%);
@@ -284,66 +284,56 @@ body.alert { background: #3a0f12; }
 }
 .drawer-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
-.inv-summary { margin-bottom: 10px; }
+.inv-summary { margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* Disposition façon Diablo : équipement à gauche, sac à droite. */
-.inv-layout { display: flex; gap: 12px; align-items: flex-start; }
-.inv-equip { width: 132px; flex-shrink: 0; }
-.inv-bag { flex: 1; min-width: 0; }
-.inv-equip h3, .inv-bag h3 {
+/* Deux colonnes : équipement à gauche, sac (+ objets au sol) à droite. */
+.inv-columns { display: flex; gap: 14px; align-items: flex-start; }
+.inv-col { flex: 1; min-width: 0; }
+.inv-col h3 {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
   color: var(--muted); margin-bottom: 8px;
 }
+#ground-section { margin-top: 14px; }
 
-.equip-slot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  margin-bottom: 8px;
+.slot-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.slot {
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 10px;
+  padding: 7px 8px;
 }
-.equip-slot .equip-icon {
-  font-size: 24px;
-  width: 40px; height: 40px;
+.slot.empty { opacity: 0.55; }
+.slot-main { display: flex; align-items: center; gap: 8px; }
+.slot-icon {
+  font-size: 22px;
+  width: 38px; height: 38px;
+  flex-shrink: 0;
   display: grid; place-items: center;
   background: #14141d;
   border: 1px solid var(--border);
   border-radius: 8px;
-  flex-shrink: 0;
 }
-.equip-meta { display: flex; flex-direction: column; min-width: 0; }
-.equip-name { font-size: 12.5px; }
-.equip-stat { font-size: 11px; color: var(--accent); }
+.slot-text { min-width: 0; display: flex; flex-direction: column; }
+.slot-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
+.slot-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot-name .qty { color: var(--muted); font-weight: 400; }
+.slot-stat { font-size: 11px; color: var(--accent); }
 
-#inventory-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-#inventory-list li {
-  font-size: 13.5px;
-  padding: 7px 9px;
-  background: var(--panel-2);
+.slot-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.slot-actions button {
+  flex: 1;
+  min-width: 64px;
+  padding: 6px 8px;
+  border-radius: 7px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-#inventory-list li.empty { color: var(--muted); font-style: italic; justify-content: flex-start; }
-.item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-qty { flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
-.item-use {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(46, 196, 182, 0.5);
-  background: rgba(46, 196, 182, 0.14);
+  background: #14141d;
   color: var(--text);
   font-size: 12px;
   cursor: pointer;
 }
-.item-use:active { background: var(--accent); color: #0f0f16; }
+.slot-actions button:active { background: #2e2e42; }
+.slot-actions .primary { border-color: rgba(46, 196, 182, 0.5); background: rgba(46, 196, 182, 0.14); }
+.slot-actions .danger { border-color: rgba(231, 76, 60, 0.4); }
 
 #log { display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 1.5; }
 .log-line { padding: 5px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
@@ -662,26 +652,25 @@ kbd {
         <button id="drawer-close" aria-label="Fermer">✕</button>
       </div>
       <div class="drawer-body">
-        <!-- Inventaire : équipement (façon Diablo) à gauche, sac à droite -->
+        <!-- Inventaire : équipement (5 emplacements) à gauche, sac (5 places)
+             à droite, et objets au sol de la case actuelle -->
         <section data-panel-content="inventory">
           <div class="inv-summary">
             <span class="chip">💰 <b id="gold-text-2">0</b> or</span>
+            <span class="chip">🛡️ <b id="armor-text">0</b> armure</span>
           </div>
-          <div class="inv-layout">
-            <div class="inv-equip">
+          <div class="inv-columns">
+            <div class="inv-col">
               <h3>Équipement</h3>
-              <div class="equip-slot" id="equip-weapon">
-                <span class="equip-icon">🗡️</span>
-                <span class="equip-meta"><b class="equip-name">—</b><span class="equip-stat"></span></span>
-              </div>
-              <div class="equip-slot" id="equip-armor">
-                <span class="equip-icon">🧥</span>
-                <span class="equip-meta"><b class="equip-name">—</b><span class="equip-stat"></span></span>
-              </div>
+              <ul id="equip-list" class="slot-list"></ul>
             </div>
-            <div class="inv-bag">
-              <h3>Sac</h3>
-              <ul id="inventory-list"><li class="empty">Sac vide</li></ul>
+            <div class="inv-col">
+              <h3>Sac (<span id="bag-count">0</span>/5)</h3>
+              <ul id="bag-list" class="slot-list"></ul>
+              <div id="ground-section" hidden>
+                <h3>Au sol ici</h3>
+                <ul id="ground-list" class="slot-list"></ul>
+              </div>
             </div>
           </div>
         </section>
@@ -1066,9 +1055,14 @@ const TRAPS = [
 
 const TREASURES = [
   { name: 'Pièces d\'or', item: 'Pièces d\'or', gold: [3, 12] },
-  { name: 'Potion de soin', item: 'Potion de soin', heal: [3, 6] },
+  { name: 'Potion de soin', item: 'Potion de soin' },
   { name: 'Vieille clé', item: 'Vieille clé' },
   { name: 'Gemme scintillante', item: 'Gemme scintillante', gold: [8, 20] },
+  // Équipements à trouver (pour alimenter le système d'équipement).
+  { name: 'Casque de cuir', item: 'Casque de cuir' },
+  { name: 'Jambières de cuir', item: 'Jambières de cuir' },
+  { name: 'Bouclier de bois', item: 'Bouclier de bois' },
+  { name: 'Dague rouillée', item: 'Dague rouillée' },
 ];
 
 // Retourne le profil pondéré (somme des poids par catégorie) des 9 cases.
@@ -1143,21 +1137,43 @@ function buildEventDetails(maze, x, y, type) {
 
 
 // ===== player.js =====
-// player.js — État de l'aventurier : PV, or, inventaire, équipement.
+// player.js — Aventurier : PV, or, 5 emplacements d'équipement, sac de 5 places.
 
-// Objets consommables et leur effet (soin). Sert au jeu pour l'utilisation
-// depuis l'inventaire et pour peupler l'équipement de départ.
-const CONSUMABLES = {
-  'Potion mineure': { heal: 5, emoji: '🧪' },
-  'Potion de soin': { heal: 8, emoji: '⚗️' },
+// Les cinq emplacements d'équipement. `accepts` = type de sol d'objet accepté.
+const SLOTS = [
+  { key: 'tete', label: 'Tête', accepts: 'tete', emoji: '🪖' },
+  { key: 'corps', label: 'Corps', accepts: 'corps', emoji: '🧥' },
+  { key: 'jambes', label: 'Jambes', accepts: 'jambes', emoji: '👖' },
+  { key: 'brasD', label: 'Bras droit', accepts: 'arm', emoji: '🗡️' },
+  { key: 'brasG', label: 'Bras gauche', accepts: 'arm', emoji: '🛡️' },
+];
+
+// Nombre de places dans le sac.
+const INVENTORY_SIZE = 5;
+
+// Catalogue des objets (indexés par nom).
+//  kind: 'equip' (équipable), 'consumable' (à boire), 'misc' (butin divers)
+//  slot: pour les équipements, le type d'emplacement ('tete','corps','jambes','arm')
+//  stack: true = plusieurs unités tiennent dans une seule place du sac
+const ITEM_DEFS = {
+  'Glaive': { name: 'Glaive', emoji: '🗡️', kind: 'equip', slot: 'arm', damage: 3, hitChance: 0.8 },
+  'Dague rouillée': { name: 'Dague rouillée', emoji: '🔪', kind: 'equip', slot: 'arm', damage: 2, hitChance: 0.85 },
+  'Bouclier de bois': { name: 'Bouclier de bois', emoji: '🛡️', kind: 'equip', slot: 'arm', armor: 2 },
+  'Tunique en tissu': { name: 'Tunique en tissu', emoji: '🧥', kind: 'equip', slot: 'corps', armor: 1 },
+  'Casque de cuir': { name: 'Casque de cuir', emoji: '🪖', kind: 'equip', slot: 'tete', armor: 1 },
+  'Jambières de cuir': { name: 'Jambières de cuir', emoji: '👖', kind: 'equip', slot: 'jambes', armor: 1 },
+  'Potion mineure': { name: 'Potion mineure', emoji: '🧪', kind: 'consumable', heal: 5, stack: true },
+  'Potion de soin': { name: 'Potion de soin', emoji: '⚗️', kind: 'consumable', heal: 8, stack: true },
+  'Vieille clé': { name: 'Vieille clé', emoji: '🗝️', kind: 'misc', stack: true },
+  'Gemme scintillante': { name: 'Gemme scintillante', emoji: '💎', kind: 'misc', stack: true },
 };
 
-// Équipement de départ (réutilisé au démarrage et à chaque relance de niveau).
-function startingWeapon() {
-  return { name: 'Glaive', damage: 3, hitChance: 0.8, emoji: '🗡️' };
-}
-function startingArmor() {
-  return { name: 'Tunique en tissu', armor: 1, emoji: '🧥' };
+// Attaque à mains nues (aucune arme équipée).
+const FISTS = { name: 'Poings', emoji: '👊', damage: 1, hitChance: 0.7 };
+
+// Retourne la définition d'un objet (valeur de repli pour les inconnus).
+function itemDef(name) {
+  return ITEM_DEFS[name] || { name, emoji: '❔', kind: 'misc', stack: true };
 }
 
 class Player {
@@ -1167,30 +1183,49 @@ class Player {
     this.maxHp = maxHp;
     this.hp = maxHp;
     this.gold = 0;
-    // Inventaire simple : map nom d'objet -> quantité.
-    this.inventory = new Map();
+    // Sac : tableau de piles { name, qty }, au plus INVENTORY_SIZE places.
+    this.bag = [];
+    // Équipement : un objet { name } (ou null) par emplacement.
+    this.equipment = { tete: null, corps: null, jambes: null, brasD: null, brasG: null };
     this._equipStartingGear();
   }
 
-  // Arme + armure équipées et objets de départ.
+  // Équipement et sac de départ (aussi à chaque relance de niveau).
   _equipStartingGear() {
-    this.weapon = startingWeapon();
-    this.armor = startingArmor();
-    // Trois potions mineures dans le sac au départ.
-    this.addItem('Potion mineure', 3);
+    this.bag = [];
+    this.equipment = { tete: null, corps: null, jambes: null, brasD: null, brasG: null };
+    this.equipment.brasD = { name: 'Glaive' };       // glaive en main droite
+    this.equipment.corps = { name: 'Tunique en tissu' }; // tunique sur le corps
+    this.addItem('Potion mineure', 3);               // 3 potions dans le sac
   }
 
   isAlive() {
     return this.hp > 0;
   }
 
-  // Valeur d'armure actuelle (mitigation des dégâts).
+  // Somme de l'armure de tous les objets équipés (mitigation des dégâts).
   armorValue() {
-    return this.armor ? this.armor.armor || 0 : 0;
+    let a = 0;
+    for (const k in this.equipment) {
+      const it = this.equipment[k];
+      if (it) a += itemDef(it.name).armor || 0;
+    }
+    return a;
   }
 
-  // Inflige des dégâts en tenant compte de l'armure (mitigation).
-  // Retourne les dégâts réellement subis (après armure).
+  // Arme active pour le combat : première main portant une arme, sinon les poings.
+  activeWeapon() {
+    for (const k of ['brasD', 'brasG']) {
+      const it = this.equipment[k];
+      if (it) {
+        const d = itemDef(it.name);
+        if (d.damage) return d;
+      }
+    }
+    return FISTS;
+  }
+
+  // Inflige des dégâts en tenant compte de l'armure. Retourne les dégâts subis.
   damage(amount) {
     const dealt = Math.max(0, amount - this.armorValue());
     this.hp = Math.max(0, this.hp - dealt);
@@ -1206,30 +1241,93 @@ class Player {
     this.gold += amount;
   }
 
+  bagFull() {
+    return this.bag.length >= INVENTORY_SIZE;
+  }
+
+  // Ajoute un objet au sac. Retourne true si placé, false si le sac est plein.
   addItem(name, qty = 1) {
-    this.inventory.set(name, (this.inventory.get(name) || 0) + qty);
+    const def = itemDef(name);
+    if (def.stack) {
+      const stack = this.bag.find((s) => s.name === name);
+      if (stack) { stack.qty += qty; return true; }
+      if (this.bagFull()) return false;
+      this.bag.push({ name, qty });
+      return true;
+    }
+    // Objets non empilables : une place par unité.
+    let placed = 0;
+    for (let i = 0; i < qty; i++) {
+      if (this.bagFull()) break;
+      this.bag.push({ name, qty: 1 });
+      placed++;
+    }
+    return placed === qty;
   }
 
-  // Retire une (ou plusieurs) unité(s) d'un objet ; supprime l'entrée à 0.
-  removeItem(name, qty = 1) {
-    const cur = this.inventory.get(name) || 0;
-    const next = cur - qty;
-    if (next <= 0) this.inventory.delete(name);
-    else this.inventory.set(name, next);
+  // Retire une unité de la pile à l'index i. Retourne { name, qty } ou null.
+  removeAt(i, qty = 1) {
+    const s = this.bag[i];
+    if (!s) return null;
+    const taken = { name: s.name, qty: Math.min(qty, s.qty) };
+    s.qty -= taken.qty;
+    if (s.qty <= 0) this.bag.splice(i, 1);
+    return taken;
   }
 
-  // Retourne l'inventaire sous forme de liste pour l'affichage.
+  // Liste du sac pour l'affichage (avec index et définition).
   items() {
-    return Array.from(this.inventory.entries()).map(([name, qty]) => ({ name, qty }));
+    return this.bag.map((s, i) => ({ name: s.name, qty: s.qty, index: i, def: itemDef(s.name) }));
   }
 
-  // Réinitialise l'état pour recommencer un niveau (position fournie par le jeu).
+  // Liste des emplacements d'équipement pour l'affichage.
+  equippedList() {
+    return SLOTS.map((slot) => {
+      const it = this.equipment[slot.key];
+      return { ...slot, name: it ? it.name : null, def: it ? itemDef(it.name) : null };
+    });
+  }
+
+  // Emplacement cible pour un type d'objet (les armes vont dans une main libre).
+  _targetSlot(slotType) {
+    if (slotType === 'arm') {
+      if (!this.equipment.brasD) return 'brasD';
+      if (!this.equipment.brasG) return 'brasG';
+      return 'brasD';
+    }
+    return slotType;
+  }
+
+  // Équipe l'objet du sac à l'index donné. L'ancien équipement retourne au sac.
+  equip(index) {
+    const s = this.bag[index];
+    if (!s) return { ok: false, reason: 'empty' };
+    const def = itemDef(s.name);
+    if (def.kind !== 'equip') return { ok: false, reason: 'not-equippable' };
+    const slotKey = this._targetSlot(def.slot);
+    const prev = this.equipment[slotKey];
+    // On retire une unité du sac (libère une place pour l'objet remplacé).
+    this.removeAt(index, 1);
+    this.equipment[slotKey] = { name: s.name };
+    if (prev) this.addItem(prev.name, 1);
+    return { ok: true, slotKey, name: s.name, replaced: prev ? prev.name : null };
+  }
+
+  // Déséquipe l'emplacement donné : l'objet retourne au sac (si de la place).
+  unequip(slotKey) {
+    const it = this.equipment[slotKey];
+    if (!it) return { ok: false, reason: 'empty' };
+    if (this.bagFull()) return { ok: false, reason: 'full' };
+    this.equipment[slotKey] = null;
+    this.addItem(it.name, 1);
+    return { ok: true, name: it.name };
+  }
+
   reset(x, y) {
     this.x = x;
     this.y = y;
     this.hp = this.maxHp;
     this.gold = 0;
-    this.inventory.clear();
     this._equipStartingGear();
   }
 }
@@ -1269,7 +1367,7 @@ class Combat {
   // --- Action : attaquer ---
   attack() {
     if (this.over) return;
-    const w = this.player.weapon;
+    const w = this.player.activeWeapon();
     if (this.rng.chance(w.hitChance)) {
       this.enemy.hp = Math.max(0, this.enemy.hp - w.damage);
       this._say(`⚔️ Tu frappes ${this.enemy.name} avec ton ${w.name} : -${w.damage} PV.`);
@@ -1530,6 +1628,11 @@ class Renderer {
           if (ev && ev.type !== EVENT.NONE) {
             this._drawEventMarker(ctx, sx, sy, ts, ev);
           }
+
+          // Marqueur d'objets déposés au sol.
+          if (game.groundItems && game.groundItems.has(`${x},${y}`)) {
+            this._drawGroundMarker(ctx, sx, sy, ts);
+          }
         }
 
         // Entrée et sortie.
@@ -1583,6 +1686,18 @@ class Renderer {
     ctx.fill();
   }
 
+  // Petit sac au sol : carré ambré posé en bas de la case.
+  _drawGroundMarker(ctx, sx, sy, ts) {
+    const s = ts * 0.22;
+    const x = sx + ts / 2 - s / 2;
+    const y = sy + ts - s - ts * 0.14;
+    ctx.fillStyle = '#d9a441';
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, s, s);
+    ctx.strokeRect(x, y, s, s);
+  }
+
   _drawGlyph(ctx, sx, sy, ts, glyph, color) {
     ctx.fillStyle = color;
     ctx.font = `${Math.floor(ts * 0.6)}px serif`;
@@ -1625,6 +1740,7 @@ class Game {
     );
     this.revealedEvents = new Map();
     this.resolvedCells = new Set(); // cases dont l'événement est déjà déclenché
+    this.groundItems = new Map();   // objets déposés/lâchés par case ("x,y" -> [{name,qty}])
 
     this.turn = 0;
     this.over = false;
@@ -1840,14 +1956,21 @@ class Game {
         return; // le combat prend le relais ; on ne vérifie pas la mort ici
       }
       case EVENT.TREASURE: {
-        this.player.addItem(ev.item);
         let msg = `💰 Trésor : ${ev.name}`;
         if (ev.gold) {
           this.player.addGold(ev.gold);
           msg += ` (+${ev.gold} or)`;
         }
-        // Les potions ne se boivent plus automatiquement : elles vont dans le
-        // sac et se consomment depuis l'inventaire (voir useItem).
+        // L'or (pièces, gemme) ne prend pas de place ; les autres objets vont
+        // dans le sac. Si le sac est plein, l'objet reste au sol sur la case.
+        const isMoney = ev.item === "Pièces d'or" || ev.item === 'Gemme scintillante';
+        if (!isMoney) {
+          const ok = this.player.addItem(ev.item);
+          if (!ok) {
+            this._dropOnGround(ev.item, 1, x, y);
+            msg += ` — sac plein, ${ev.item} reste au sol`;
+          }
+        }
         this.emit('log', msg + ' !');
         break;
       }
@@ -1876,12 +1999,15 @@ class Game {
     }
   }
 
-  // Utilise un objet consommable de l'inventaire (potion de soin).
-  // Action de menu : n'avance pas le tour du monde.
-  useItem(name) {
+  // ---------- Inventaire / équipement (actions de menu, sans tour de jeu) ----------
+
+  // Boit un consommable du sac (par index de pile).
+  useItem(index) {
     if (this.over || this.inCombat) return;
-    const def = CONSUMABLES[name];
-    if (!def || !this.player.inventory.get(name)) return;
+    const stack = this.player.bag[index];
+    if (!stack) return;
+    const def = itemDef(stack.name);
+    if (def.kind !== 'consumable' || !def.heal) return;
     if (this.player.hp >= this.player.maxHp) {
       this.emit('log', 'Tes PV sont déjà au maximum.');
       this.emit('update');
@@ -1889,10 +2015,78 @@ class Game {
     }
     const before = this.player.hp;
     this.player.heal(def.heal);
-    this.player.removeItem(name);
-    const gained = this.player.hp - before;
-    this.emit('log', `🧪 Tu bois une ${name} (+${gained} PV).`);
+    this.player.removeAt(index, 1);
+    this.emit('log', `🧪 Tu bois une ${stack.name} (+${this.player.hp - before} PV).`);
     this.emit('update');
+  }
+
+  // Équipe l'objet du sac à l'index donné.
+  equipItem(index) {
+    if (this.over || this.inCombat) return;
+    const res = this.player.equip(index);
+    if (!res.ok) return;
+    let msg = `🧷 Tu équipes ${res.name}.`;
+    if (res.replaced) msg += ` (${res.replaced} rangé dans le sac)`;
+    this.emit('log', msg);
+    this.emit('update');
+  }
+
+  // Déséquipe l'emplacement donné (l'objet retourne au sac).
+  unequipItem(slotKey) {
+    if (this.over || this.inCombat) return;
+    const res = this.player.unequip(slotKey);
+    if (!res.ok) {
+      if (res.reason === 'full') this.emit('log', 'Sac plein : libère une place avant de déséquiper.');
+      return;
+    }
+    this.emit('log', `↩️ Tu retires ${res.name}.`);
+    this.emit('update');
+  }
+
+  // Jette une unité d'un objet du sac au sol, sur la case actuelle.
+  dropItem(index) {
+    if (this.over || this.inCombat) return;
+    const taken = this.player.removeAt(index, 1);
+    if (!taken) return;
+    this._dropOnGround(taken.name, taken.qty, this.player.x, this.player.y);
+    this.emit('log', `⬇️ Tu déposes ${taken.name} au sol.`);
+    this.emit('update');
+  }
+
+  // Ramasse un objet posé au sol sur la case actuelle.
+  pickUp(name) {
+    if (this.over || this.inCombat) return;
+    const key = `${this.player.x},${this.player.y}`;
+    const arr = this.groundItems.get(key);
+    if (!arr) return;
+    const i = arr.findIndex((s) => s.name === name);
+    if (i < 0) return;
+    if (!this.player.addItem(name, 1)) {
+      this.emit('log', 'Sac plein : libère une place pour ramasser.');
+      this.emit('update');
+      return;
+    }
+    arr[i].qty -= 1;
+    if (arr[i].qty <= 0) arr.splice(i, 1);
+    if (arr.length === 0) this.groundItems.delete(key);
+    this.emit('log', `⬆️ Tu ramasses ${name}.`);
+    this.emit('update');
+  }
+
+  // Objets au sol sur la case actuelle (pour l'interface).
+  groundHere() {
+    return this.groundItems.get(`${this.player.x},${this.player.y}`) || [];
+  }
+
+  // Dépose un objet au sol sur une case (empile les objets empilables).
+  _dropOnGround(name, qty, x, y) {
+    const key = `${x},${y}`;
+    const arr = this.groundItems.get(key) || [];
+    const def = itemDef(name);
+    const existing = def.stack ? arr.find((s) => s.name === name) : null;
+    if (existing) existing.qty += qty;
+    else arr.push({ name, qty });
+    this.groundItems.set(key, arr);
   }
 
   // Crochet déclenché à la toute première détection par le Minotaure.
@@ -1927,8 +2121,13 @@ const hpFill = $('hp-fill');
 const hpText = $('hp-text');
 const goldText = $('gold-text');
 const goldText2 = $('gold-text-2');
+const armorText = $('armor-text');
 const turnText = $('turn-text');
-const invList = $('inventory-list');
+const equipList = $('equip-list');
+const bagList = $('bag-list');
+const bagCount = $('bag-count');
+const groundSection = $('ground-section');
+const groundList = $('ground-list');
 const logEl = $('log');
 const toastsEl = $('toasts');
 const seedInput = $('seed-input');
@@ -1992,58 +2191,130 @@ function updateHud(g) {
   hpText.textContent = `${p.hp} / ${p.maxHp}`;
   goldText.textContent = p.gold;
   if (goldText2) goldText2.textContent = p.gold;
+  if (armorText) armorText.textContent = p.armorValue();
   turnText.textContent = g.turn;
 
   renderEquipment(p);
   renderBag(p);
+  renderGround(g);
 }
 
-// Affiche l'arme et l'armure équipées (emplacements façon Diablo).
+// Fabrique le bloc principal (icône + textes) d'un objet/emplacement.
+function slotMain(emoji, label, name, stat) {
+  const main = document.createElement('div');
+  main.className = 'slot-main';
+  const icon = document.createElement('span');
+  icon.className = 'slot-icon';
+  icon.textContent = emoji;
+  const text = document.createElement('div');
+  text.className = 'slot-text';
+  if (label) {
+    const l = document.createElement('span');
+    l.className = 'slot-label';
+    l.textContent = label;
+    text.appendChild(l);
+  }
+  const n = document.createElement('span');
+  n.className = 'slot-name';
+  n.innerHTML = name;
+  text.appendChild(n);
+  if (stat) {
+    const s = document.createElement('span');
+    s.className = 'slot-stat';
+    s.textContent = stat;
+    text.appendChild(s);
+  }
+  main.appendChild(icon);
+  main.appendChild(text);
+  return main;
+}
+
+function actionBtn(label, cls, onClick) {
+  const b = document.createElement('button');
+  if (cls) b.className = cls;
+  b.textContent = label;
+  b.addEventListener('click', onClick);
+  return b;
+}
+
+function statOf(def) {
+  if (!def) return '';
+  if (def.damage) return `${def.damage} dégâts`;
+  if (def.armor) return `${def.armor} armure`;
+  if (def.heal) return `soigne ${def.heal}`;
+  return '';
+}
+
+// Les 5 emplacements d'équipement (bouton « Retirer » si occupé).
 function renderEquipment(p) {
-  const w = p.weapon;
-  const a = p.armor;
-  const setSlot = (id, gear, statText) => {
-    const el = $(id);
-    if (!el) return;
-    el.querySelector('.equip-icon').textContent = gear ? gear.emoji || '⬚' : '⬚';
-    el.querySelector('.equip-name').textContent = gear ? gear.name : '—';
-    el.querySelector('.equip-stat').textContent = gear ? statText : '';
-  };
-  setSlot('equip-weapon', w, w ? `${w.damage} dégâts` : '');
-  setSlot('equip-armor', a, a ? `${a.armor} armure` : '');
+  equipList.innerHTML = '';
+  for (const slot of p.equippedList()) {
+    const li = document.createElement('li');
+    li.className = 'slot' + (slot.name ? '' : ' empty');
+    const emoji = slot.def ? slot.def.emoji : slot.emoji;
+    li.appendChild(slotMain(emoji, slot.label, slot.name || 'vide', statOf(slot.def)));
+    if (slot.name) {
+      const actions = document.createElement('div');
+      actions.className = 'slot-actions';
+      actions.appendChild(actionBtn('Retirer', 'danger', () => game.unequipItem(slot.key)));
+      li.appendChild(actions);
+    }
+    equipList.appendChild(li);
+  }
 }
 
-// Affiche le sac ; les consommables reçoivent un bouton « Boire ».
+// Le sac (5 places) : boutons Équiper / Boire / Jeter selon le type d'objet.
 function renderBag(p) {
-  invList.innerHTML = '';
+  bagList.innerHTML = '';
+  if (bagCount) bagCount.textContent = p.bag.length;
   const items = p.items();
   if (items.length === 0) {
     const li = document.createElement('li');
-    li.className = 'empty';
-    li.textContent = 'Sac vide';
-    invList.appendChild(li);
+    li.className = 'slot empty';
+    li.appendChild(slotMain('🎒', '', 'Sac vide', ''));
+    bagList.appendChild(li);
     return;
   }
   for (const it of items) {
     const li = document.createElement('li');
-    const label = document.createElement('span');
-    label.className = 'item-name';
-    label.textContent = it.name;
-    li.appendChild(label);
-    if (it.qty > 1) {
-      const qty = document.createElement('span');
-      qty.className = 'item-qty';
-      qty.textContent = `×${it.qty}`;
-      li.appendChild(qty);
+    li.className = 'slot';
+    const nameHtml = it.qty > 1 ? `${it.name} <span class="qty">×${it.qty}</span>` : it.name;
+    li.appendChild(slotMain(it.def.emoji, '', nameHtml, statOf(it.def)));
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+    if (it.def.kind === 'equip') {
+      actions.appendChild(actionBtn('Équiper', 'primary', () => game.equipItem(it.index)));
     }
-    if (CONSUMABLES[it.name]) {
-      const btn = document.createElement('button');
-      btn.className = 'item-use';
-      btn.textContent = 'Boire';
-      btn.addEventListener('click', () => game.useItem(it.name));
-      li.appendChild(btn);
+    if (it.def.kind === 'consumable' && it.def.heal) {
+      actions.appendChild(actionBtn('Boire', 'primary', () => game.useItem(it.index)));
     }
-    invList.appendChild(li);
+    actions.appendChild(actionBtn('Jeter', 'danger', () => game.dropItem(it.index)));
+    li.appendChild(actions);
+    bagList.appendChild(li);
+  }
+}
+
+// Objets posés au sol sur la case actuelle (bouton « Ramasser »).
+function renderGround(g) {
+  const ground = g.groundHere();
+  if (!ground.length) {
+    groundSection.hidden = true;
+    groundList.innerHTML = '';
+    return;
+  }
+  groundSection.hidden = false;
+  groundList.innerHTML = '';
+  for (const it of ground) {
+    const def = itemDef(it.name);
+    const li = document.createElement('li');
+    li.className = 'slot';
+    const nameHtml = it.qty > 1 ? `${it.name} <span class="qty">×${it.qty}</span>` : it.name;
+    li.appendChild(slotMain(def.emoji, '', nameHtml, statOf(def)));
+    const actions = document.createElement('div');
+    actions.className = 'slot-actions';
+    actions.appendChild(actionBtn('Ramasser', 'primary', () => game.pickUp(it.name)));
+    li.appendChild(actions);
+    groundList.appendChild(li);
   }
 }
 

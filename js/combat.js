@@ -31,7 +31,7 @@ export class Combat {
   // --- Action : attaquer ---
   attack() {
     if (this.over) return;
-    const w = this.player.weapon;
+    const w = this.player.activeWeapon();
     if (this.rng.chance(w.hitChance)) {
       this.enemy.hp = Math.max(0, this.enemy.hp - w.damage);
       this._say(`⚔️ Tu frappes ${this.enemy.name} avec ton ${w.name} : -${w.damage} PV.`);

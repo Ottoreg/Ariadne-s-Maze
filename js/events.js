@@ -49,9 +49,14 @@ const TRAPS = [
 
 const TREASURES = [
   { name: 'Pièces d\'or', item: 'Pièces d\'or', gold: [3, 12] },
-  { name: 'Potion de soin', item: 'Potion de soin', heal: [3, 6] },
+  { name: 'Potion de soin', item: 'Potion de soin' },
   { name: 'Vieille clé', item: 'Vieille clé' },
   { name: 'Gemme scintillante', item: 'Gemme scintillante', gold: [8, 20] },
+  // Équipements à trouver (pour alimenter le système d'équipement).
+  { name: 'Casque de cuir', item: 'Casque de cuir' },
+  { name: 'Jambières de cuir', item: 'Jambières de cuir' },
+  { name: 'Bouclier de bois', item: 'Bouclier de bois' },
+  { name: 'Dague rouillée', item: 'Dague rouillée' },
 ];
 
 // Retourne le profil pondéré (somme des poids par catégorie) des 9 cases.

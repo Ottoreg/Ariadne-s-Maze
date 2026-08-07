@@ -69,26 +69,25 @@
         <button id="drawer-close" aria-label="Fermer">✕</button>
       </div>
       <div class="drawer-body">
-        <!-- Inventaire : équipement (façon Diablo) à gauche, sac à droite -->
+        <!-- Inventaire : équipement (5 emplacements) à gauche, sac (5 places)
+             à droite, et objets au sol de la case actuelle -->
         <section data-panel-content="inventory">
           <div class="inv-summary">
             <span class="chip">💰 <b id="gold-text-2">0</b> or</span>
+            <span class="chip">🛡️ <b id="armor-text">0</b> armure</span>
           </div>
-          <div class="inv-layout">
-            <div class="inv-equip">
+          <div class="inv-columns">
+            <div class="inv-col">
               <h3>Équipement</h3>
-              <div class="equip-slot" id="equip-weapon">
-                <span class="equip-icon">🗡️</span>
-                <span class="equip-meta"><b class="equip-name">—</b><span class="equip-stat"></span></span>
-              </div>
-              <div class="equip-slot" id="equip-armor">
-                <span class="equip-icon">🧥</span>
-                <span class="equip-meta"><b class="equip-name">—</b><span class="equip-stat"></span></span>
-              </div>
+              <ul id="equip-list" class="slot-list"></ul>
             </div>
-            <div class="inv-bag">
-              <h3>Sac</h3>
-              <ul id="inventory-list"><li class="empty">Sac vide</li></ul>
+            <div class="inv-col">
+              <h3>Sac (<span id="bag-count">0</span>/5)</h3>
+              <ul id="bag-list" class="slot-list"></ul>
+              <div id="ground-section" hidden>
+                <h3>Au sol ici</h3>
+                <ul id="ground-list" class="slot-list"></ul>
+              </div>
             </div>
           </div>
         </section>

@@ -84,6 +84,11 @@ export class Renderer {
           if (ev && ev.type !== EVENT.NONE) {
             this._drawEventMarker(ctx, sx, sy, ts, ev);
           }
+
+          // Marqueur d'objets déposés au sol.
+          if (game.groundItems && game.groundItems.has(`${x},${y}`)) {
+            this._drawGroundMarker(ctx, sx, sy, ts);
+          }
         }
 
         // Entrée et sortie.
@@ -135,6 +140,18 @@ export class Renderer {
     ctx.beginPath();
     ctx.arc(sx + ts / 2, sy + ts / 2, ts * 0.14, 0, Math.PI * 2);
     ctx.fill();
+  }
+
+  // Petit sac au sol : carré ambré posé en bas de la case.
+  _drawGroundMarker(ctx, sx, sy, ts) {
+    const s = ts * 0.22;
+    const x = sx + ts / 2 - s / 2;
+    const y = sy + ts - s - ts * 0.14;
+    ctx.fillStyle = '#d9a441';
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1;
+    ctx.fillRect(x, y, s, s);
+    ctx.strokeRect(x, y, s, s);
   }
 
   _drawGlyph(ctx, sx, sy, ts, glyph, color) {
