@@ -21,6 +21,13 @@ hors-ligne.
   - **Attaquer** (80 % de toucher), **Parer** (60 % de bloquer l'attaque),
     **Fuir** (50 % de réussite). Le monstre riposte selon sa propre précision et
     ne peut pas fuir. Victoire = butin en or ; défaite à 0 PV = niveau recommencé.
+- 🧰 **Équipement & inventaire (façon Diablo)** : les emplacements **arme** et
+  **armure** équipés sont affichés à côté du sac. Le joueur démarre avec un
+  **glaive** et une **tunique en tissu** (1 armure). L'**armure mitige** tous les
+  dégâts reçus (traps, monstres, Minotaure). Le sac contient au départ
+  **3 potions mineures** (+5 PV), à boire depuis l'inventaire.
+- 📱 **Verrou paysage** : le jeu invite à tourner l'appareil en portrait
+  (`orientation: landscape` + tentative de verrouillage + invite plein écran).
 - 🕹️ **Déplacement case par case** (flèches, ZQSD, WASD, ou croix tactile).
 - ❤️ **Points de vie** : à 0, l'aventurier meurt et le niveau recommence.
 - 🐂 **Minotaure** mobile : il patrouille, détecte le joueur dans un rayon donné,

@@ -4,6 +4,7 @@
 import { Game } from './game.js';
 import { Renderer } from './render.js';
 import { EVENT } from './events.js';
+import { CONSUMABLES } from './player.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -82,19 +83,56 @@ function updateHud(g) {
   if (goldText2) goldText2.textContent = p.gold;
   turnText.textContent = g.turn;
 
+  renderEquipment(p);
+  renderBag(p);
+}
+
+// Affiche l'arme et l'armure équipées (emplacements façon Diablo).
+function renderEquipment(p) {
+  const w = p.weapon;
+  const a = p.armor;
+  const setSlot = (id, gear, statText) => {
+    const el = $(id);
+    if (!el) return;
+    el.querySelector('.equip-icon').textContent = gear ? gear.emoji || '⬚' : '⬚';
+    el.querySelector('.equip-name').textContent = gear ? gear.name : '—';
+    el.querySelector('.equip-stat').textContent = gear ? statText : '';
+  };
+  setSlot('equip-weapon', w, w ? `${w.damage} dégâts` : '');
+  setSlot('equip-armor', a, a ? `${a.armor} armure` : '');
+}
+
+// Affiche le sac ; les consommables reçoivent un bouton « Boire ».
+function renderBag(p) {
   invList.innerHTML = '';
   const items = p.items();
   if (items.length === 0) {
     const li = document.createElement('li');
     li.className = 'empty';
-    li.textContent = 'Inventaire vide';
+    li.textContent = 'Sac vide';
     invList.appendChild(li);
-  } else {
-    for (const it of items) {
-      const li = document.createElement('li');
-      li.textContent = it.qty > 1 ? `${it.name} ×${it.qty}` : it.name;
-      invList.appendChild(li);
+    return;
+  }
+  for (const it of items) {
+    const li = document.createElement('li');
+    const label = document.createElement('span');
+    label.className = 'item-name';
+    label.textContent = it.name;
+    li.appendChild(label);
+    if (it.qty > 1) {
+      const qty = document.createElement('span');
+      qty.className = 'item-qty';
+      qty.textContent = `×${it.qty}`;
+      li.appendChild(qty);
     }
+    if (CONSUMABLES[it.name]) {
+      const btn = document.createElement('button');
+      btn.className = 'item-use';
+      btn.textContent = 'Boire';
+      btn.addEventListener('click', () => game.useItem(it.name));
+      li.appendChild(btn);
+    }
+    invList.appendChild(li);
   }
 }
 
@@ -336,6 +374,20 @@ function randomSeed() {
   const w = words[Math.floor(Math.random() * words.length)];
   return `${w}-${Math.floor(Math.random() * 100000)}`;
 }
+
+// ---------- Verrou d'orientation (best-effort) ----------
+// Le jeu est pensé pour le paysage. Le verrou d'orientation n'est possible
+// que sur certaines plateformes (surtout en plein écran / PWA installée) ;
+// à défaut, l'invite CSS #rotate-notice prend le relais en portrait.
+function tryLockLandscape() {
+  try {
+    const o = screen.orientation;
+    if (o && typeof o.lock === 'function') o.lock('landscape').catch(() => {});
+  } catch (_) { /* non supporté : on s'appuie sur l'invite CSS */ }
+}
+tryLockLandscape();
+// Nouvel essai au premier contact (certaines plateformes l'exigent).
+window.addEventListener('pointerdown', tryLockLandscape, { once: true });
 
 // ---------- Service worker (PWA) ----------
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

@@ -276,15 +276,65 @@ body.alert { background: #3a0f12; }
 .drawer-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
 .inv-summary { margin-bottom: 10px; }
+
+/* Disposition façon Diablo : équipement à gauche, sac à droite. */
+.inv-layout { display: flex; gap: 12px; align-items: flex-start; }
+.inv-equip { width: 132px; flex-shrink: 0; }
+.inv-bag { flex: 1; min-width: 0; }
+.inv-equip h3, .inv-bag h3 {
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+  color: var(--muted); margin-bottom: 8px;
+}
+
+.equip-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.equip-slot .equip-icon {
+  font-size: 24px;
+  width: 40px; height: 40px;
+  display: grid; place-items: center;
+  background: #14141d;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.equip-meta { display: flex; flex-direction: column; min-width: 0; }
+.equip-name { font-size: 12.5px; }
+.equip-stat { font-size: 11px; color: var(--accent); }
+
 #inventory-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
 #inventory-list li {
-  font-size: 14px;
-  padding: 8px 10px;
+  font-size: 13.5px;
+  padding: 7px 9px;
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
 }
-#inventory-list li.empty { color: var(--muted); font-style: italic; }
+#inventory-list li.empty { color: var(--muted); font-style: italic; justify-content: flex-start; }
+.item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-qty { flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
+.item-use {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(46, 196, 182, 0.5);
+  background: rgba(46, 196, 182, 0.14);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+}
+.item-use:active { background: var(--accent); color: #0f0f16; }
 
 #log { display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 1.5; }
 .log-line { padding: 5px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
@@ -511,3 +561,33 @@ kbd {
 @media (min-width: 900px) and (pointer: fine) {
   #dpad, #actions { opacity: 0.9; }
 }
+
+/* ---------- Verrou paysage : invite à tourner l'appareil en portrait ---------- */
+#rotate-notice { display: none; }
+@media (orientation: portrait) {
+  #rotate-notice {
+    position: fixed;
+    inset: 0;
+    z-index: 50; /* au-dessus de tout, même du combat */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    padding: 32px;
+    text-align: center;
+  }
+  /* On masque le jeu tant qu'on est en portrait. */
+  #app { visibility: hidden; }
+}
+.rotate-inner { max-width: 300px; }
+.rotate-icon {
+  font-size: 64px;
+  animation: rotate-hint 2.4s ease-in-out infinite;
+  display: inline-block;
+}
+@keyframes rotate-hint {
+  0%, 60%, 100% { transform: rotate(0deg); }
+  30% { transform: rotate(-90deg); }
+}
+.rotate-inner p { margin-top: 14px; font-size: 16px; }
+.rotate-inner .rotate-sub { margin-top: 6px; font-size: 13px; color: var(--muted); }

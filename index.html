@@ -11,6 +11,15 @@
   <link rel="stylesheet" href="./css/style.css" />
 </head>
 <body>
+  <!-- Invite à passer en paysage (le jeu est conçu pour ce mode). -->
+  <div id="rotate-notice">
+    <div class="rotate-inner">
+      <div class="rotate-icon">🔄</div>
+      <p><b>Ariadne's Maze</b> se joue en mode paysage.</p>
+      <p class="rotate-sub">Tourne ton appareil pour continuer.</p>
+    </div>
+  </div>
+
   <!-- La vue principale est le labyrinthe plein écran ; le HUD est en surimpression. -->
   <div id="app">
     <canvas id="game"></canvas>
@@ -60,12 +69,28 @@
         <button id="drawer-close" aria-label="Fermer">✕</button>
       </div>
       <div class="drawer-body">
-        <!-- Inventaire -->
+        <!-- Inventaire : équipement (façon Diablo) à gauche, sac à droite -->
         <section data-panel-content="inventory">
           <div class="inv-summary">
             <span class="chip">💰 <b id="gold-text-2">0</b> or</span>
           </div>
-          <ul id="inventory-list"><li class="empty">Inventaire vide</li></ul>
+          <div class="inv-layout">
+            <div class="inv-equip">
+              <h3>Équipement</h3>
+              <div class="equip-slot" id="equip-weapon">
+                <span class="equip-icon">🗡️</span>
+                <span class="equip-meta"><b class="equip-name">—</b><span class="equip-stat"></span></span>
+              </div>
+              <div class="equip-slot" id="equip-armor">
+                <span class="equip-icon">🧥</span>
+                <span class="equip-meta"><b class="equip-name">—</b><span class="equip-stat"></span></span>
+              </div>
+            </div>
+            <div class="inv-bag">
+              <h3>Sac</h3>
+              <ul id="inventory-list"><li class="empty">Sac vide</li></ul>
+            </div>
+          </div>
         </section>
 
         <!-- Journal / historique des événements -->

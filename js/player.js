@@ -1,4 +1,19 @@
-// player.js — État de l'aventurier : position, points de vie, inventaire.
+// player.js — État de l'aventurier : PV, or, inventaire, équipement.
+
+// Objets consommables et leur effet (soin). Sert au jeu pour l'utilisation
+// depuis l'inventaire et pour peupler l'équipement de départ.
+export const CONSUMABLES = {
+  'Potion mineure': { heal: 5, emoji: '🧪' },
+  'Potion de soin': { heal: 8, emoji: '⚗️' },
+};
+
+// Équipement de départ (réutilisé au démarrage et à chaque relance de niveau).
+function startingWeapon() {
+  return { name: 'Glaive', damage: 3, hitChance: 0.8, emoji: '🗡️' };
+}
+function startingArmor() {
+  return { name: 'Tunique en tissu', armor: 1, emoji: '🧥' };
+}
 
 export class Player {
   constructor(x, y, maxHp = 20) {
@@ -9,17 +24,32 @@ export class Player {
     this.gold = 0;
     // Inventaire simple : map nom d'objet -> quantité.
     this.inventory = new Map();
-    // Arme équipée par défaut : un glaive de base (3 dégâts par coup).
-    this.weapon = { name: 'Glaive', damage: 3, hitChance: 0.8 };
+    this._equipStartingGear();
+  }
+
+  // Arme + armure équipées et objets de départ.
+  _equipStartingGear() {
+    this.weapon = startingWeapon();
+    this.armor = startingArmor();
+    // Trois potions mineures dans le sac au départ.
+    this.addItem('Potion mineure', 3);
   }
 
   isAlive() {
     return this.hp > 0;
   }
 
+  // Valeur d'armure actuelle (mitigation des dégâts).
+  armorValue() {
+    return this.armor ? this.armor.armor || 0 : 0;
+  }
+
+  // Inflige des dégâts en tenant compte de l'armure (mitigation).
+  // Retourne les dégâts réellement subis (après armure).
   damage(amount) {
-    this.hp = Math.max(0, this.hp - amount);
-    return this.hp;
+    const dealt = Math.max(0, amount - this.armorValue());
+    this.hp = Math.max(0, this.hp - dealt);
+    return dealt;
   }
 
   heal(amount) {
@@ -35,7 +65,15 @@ export class Player {
     this.inventory.set(name, (this.inventory.get(name) || 0) + qty);
   }
 
-  // Retourne l'inventaire sous forme de liste triée pour l'affichage.
+  // Retire une (ou plusieurs) unité(s) d'un objet ; supprime l'entrée à 0.
+  removeItem(name, qty = 1) {
+    const cur = this.inventory.get(name) || 0;
+    const next = cur - qty;
+    if (next <= 0) this.inventory.delete(name);
+    else this.inventory.set(name, next);
+  }
+
+  // Retourne l'inventaire sous forme de liste pour l'affichage.
   items() {
     return Array.from(this.inventory.entries()).map(([name, qty]) => ({ name, qty }));
   }
@@ -47,7 +85,6 @@ export class Player {
     this.hp = this.maxHp;
     this.gold = 0;
     this.inventory.clear();
-    // On repart toujours avec le glaive de base.
-    this.weapon = { name: 'Glaive', damage: 3, hitChance: 0.8 };
+    this._equipStartingGear();
   }
 }
