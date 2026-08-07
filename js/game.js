@@ -3,7 +3,7 @@
 // les points de vie, la mort/relance de niveau et l'inventaire.
 
 import { Maze, TILE } from './maze.js';
-import { Player, CONSUMABLES } from './player.js';
+import { Player, itemDef } from './player.js';
 import { Minotaur } from './minotaur.js';
 import { computeEvent, EVENT } from './events.js';
 import { Combat } from './combat.js';
@@ -35,6 +35,7 @@ export class Game {
     );
     this.revealedEvents = new Map();
     this.resolvedCells = new Set(); // cases dont l'événement est déjà déclenché
+    this.groundItems = new Map();   // objets déposés/lâchés par case ("x,y" -> [{name,qty}])
 
     this.turn = 0;
     this.over = false;
@@ -250,14 +251,21 @@ export class Game {
         return; // le combat prend le relais ; on ne vérifie pas la mort ici
       }
       case EVENT.TREASURE: {
-        this.player.addItem(ev.item);
         let msg = `💰 Trésor : ${ev.name}`;
         if (ev.gold) {
           this.player.addGold(ev.gold);
           msg += ` (+${ev.gold} or)`;
         }
-        // Les potions ne se boivent plus automatiquement : elles vont dans le
-        // sac et se consomment depuis l'inventaire (voir useItem).
+        // L'or (pièces, gemme) ne prend pas de place ; les autres objets vont
+        // dans le sac. Si le sac est plein, l'objet reste au sol sur la case.
+        const isMoney = ev.item === "Pièces d'or" || ev.item === 'Gemme scintillante';
+        if (!isMoney) {
+          const ok = this.player.addItem(ev.item);
+          if (!ok) {
+            this._dropOnGround(ev.item, 1, x, y);
+            msg += ` — sac plein, ${ev.item} reste au sol`;
+          }
+        }
         this.emit('log', msg + ' !');
         break;
       }
@@ -286,12 +294,15 @@ export class Game {
     }
   }
 
-  // Utilise un objet consommable de l'inventaire (potion de soin).
-  // Action de menu : n'avance pas le tour du monde.
-  useItem(name) {
+  // ---------- Inventaire / équipement (actions de menu, sans tour de jeu) ----------
+
+  // Boit un consommable du sac (par index de pile).
+  useItem(index) {
     if (this.over || this.inCombat) return;
-    const def = CONSUMABLES[name];
-    if (!def || !this.player.inventory.get(name)) return;
+    const stack = this.player.bag[index];
+    if (!stack) return;
+    const def = itemDef(stack.name);
+    if (def.kind !== 'consumable' || !def.heal) return;
     if (this.player.hp >= this.player.maxHp) {
       this.emit('log', 'Tes PV sont déjà au maximum.');
       this.emit('update');
@@ -299,10 +310,78 @@ export class Game {
     }
     const before = this.player.hp;
     this.player.heal(def.heal);
-    this.player.removeItem(name);
-    const gained = this.player.hp - before;
-    this.emit('log', `🧪 Tu bois une ${name} (+${gained} PV).`);
+    this.player.removeAt(index, 1);
+    this.emit('log', `🧪 Tu bois une ${stack.name} (+${this.player.hp - before} PV).`);
     this.emit('update');
+  }
+
+  // Équipe l'objet du sac à l'index donné.
+  equipItem(index) {
+    if (this.over || this.inCombat) return;
+    const res = this.player.equip(index);
+    if (!res.ok) return;
+    let msg = `🧷 Tu équipes ${res.name}.`;
+    if (res.replaced) msg += ` (${res.replaced} rangé dans le sac)`;
+    this.emit('log', msg);
+    this.emit('update');
+  }
+
+  // Déséquipe l'emplacement donné (l'objet retourne au sac).
+  unequipItem(slotKey) {
+    if (this.over || this.inCombat) return;
+    const res = this.player.unequip(slotKey);
+    if (!res.ok) {
+      if (res.reason === 'full') this.emit('log', 'Sac plein : libère une place avant de déséquiper.');
+      return;
+    }
+    this.emit('log', `↩️ Tu retires ${res.name}.`);
+    this.emit('update');
+  }
+
+  // Jette une unité d'un objet du sac au sol, sur la case actuelle.
+  dropItem(index) {
+    if (this.over || this.inCombat) return;
+    const taken = this.player.removeAt(index, 1);
+    if (!taken) return;
+    this._dropOnGround(taken.name, taken.qty, this.player.x, this.player.y);
+    this.emit('log', `⬇️ Tu déposes ${taken.name} au sol.`);
+    this.emit('update');
+  }
+
+  // Ramasse un objet posé au sol sur la case actuelle.
+  pickUp(name) {
+    if (this.over || this.inCombat) return;
+    const key = `${this.player.x},${this.player.y}`;
+    const arr = this.groundItems.get(key);
+    if (!arr) return;
+    const i = arr.findIndex((s) => s.name === name);
+    if (i < 0) return;
+    if (!this.player.addItem(name, 1)) {
+      this.emit('log', 'Sac plein : libère une place pour ramasser.');
+      this.emit('update');
+      return;
+    }
+    arr[i].qty -= 1;
+    if (arr[i].qty <= 0) arr.splice(i, 1);
+    if (arr.length === 0) this.groundItems.delete(key);
+    this.emit('log', `⬆️ Tu ramasses ${name}.`);
+    this.emit('update');
+  }
+
+  // Objets au sol sur la case actuelle (pour l'interface).
+  groundHere() {
+    return this.groundItems.get(`${this.player.x},${this.player.y}`) || [];
+  }
+
+  // Dépose un objet au sol sur une case (empile les objets empilables).
+  _dropOnGround(name, qty, x, y) {
+    const key = `${x},${y}`;
+    const arr = this.groundItems.get(key) || [];
+    const def = itemDef(name);
+    const existing = def.stack ? arr.find((s) => s.name === name) : null;
+    if (existing) existing.qty += qty;
+    else arr.push({ name, qty });
+    this.groundItems.set(key, arr);
   }
 
   // Crochet déclenché à la toute première détection par le Minotaure.

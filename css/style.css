@@ -245,7 +245,7 @@ body.alert { background: #3a0f12; }
   top: 0;
   right: 0;
   height: 100%;
-  width: min(360px, 86vw);
+  width: min(480px, 94vw);
   background: var(--panel);
   border-left: 1px solid var(--border);
   transform: translateX(100%);
@@ -275,66 +275,56 @@ body.alert { background: #3a0f12; }
 }
 .drawer-body { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 
-.inv-summary { margin-bottom: 10px; }
+.inv-summary { margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap; }
 
-/* Disposition façon Diablo : équipement à gauche, sac à droite. */
-.inv-layout { display: flex; gap: 12px; align-items: flex-start; }
-.inv-equip { width: 132px; flex-shrink: 0; }
-.inv-bag { flex: 1; min-width: 0; }
-.inv-equip h3, .inv-bag h3 {
+/* Deux colonnes : équipement à gauche, sac (+ objets au sol) à droite. */
+.inv-columns { display: flex; gap: 14px; align-items: flex-start; }
+.inv-col { flex: 1; min-width: 0; }
+.inv-col h3 {
   font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
   color: var(--muted); margin-bottom: 8px;
 }
+#ground-section { margin-top: 14px; }
 
-.equip-slot {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  margin-bottom: 8px;
+.slot-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+.slot {
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 10px;
+  padding: 7px 8px;
 }
-.equip-slot .equip-icon {
-  font-size: 24px;
-  width: 40px; height: 40px;
+.slot.empty { opacity: 0.55; }
+.slot-main { display: flex; align-items: center; gap: 8px; }
+.slot-icon {
+  font-size: 22px;
+  width: 38px; height: 38px;
+  flex-shrink: 0;
   display: grid; place-items: center;
   background: #14141d;
   border: 1px solid var(--border);
   border-radius: 8px;
-  flex-shrink: 0;
 }
-.equip-meta { display: flex; flex-direction: column; min-width: 0; }
-.equip-name { font-size: 12.5px; }
-.equip-stat { font-size: 11px; color: var(--accent); }
+.slot-text { min-width: 0; display: flex; flex-direction: column; }
+.slot-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; color: var(--muted); }
+.slot-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.slot-name .qty { color: var(--muted); font-weight: 400; }
+.slot-stat { font-size: 11px; color: var(--accent); }
 
-#inventory-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-#inventory-list li {
-  font-size: 13.5px;
-  padding: 7px 9px;
-  background: var(--panel-2);
+.slot-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 7px; }
+.slot-actions button {
+  flex: 1;
+  min-width: 64px;
+  padding: 6px 8px;
+  border-radius: 7px;
   border: 1px solid var(--border);
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-#inventory-list li.empty { color: var(--muted); font-style: italic; justify-content: flex-start; }
-.item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.item-qty { flex-shrink: 0; color: var(--muted); font-variant-numeric: tabular-nums; }
-.item-use {
-  flex-shrink: 0;
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(46, 196, 182, 0.5);
-  background: rgba(46, 196, 182, 0.14);
+  background: #14141d;
   color: var(--text);
   font-size: 12px;
   cursor: pointer;
 }
-.item-use:active { background: var(--accent); color: #0f0f16; }
+.slot-actions button:active { background: #2e2e42; }
+.slot-actions .primary { border-color: rgba(46, 196, 182, 0.5); background: rgba(46, 196, 182, 0.14); }
+.slot-actions .danger { border-color: rgba(231, 76, 60, 0.4); }
 
 #log { display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 1.5; }
 .log-line { padding: 5px 2px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }

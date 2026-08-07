@@ -21,11 +21,15 @@ hors-ligne.
   - **Attaquer** (80 % de toucher), **Parer** (60 % de bloquer l'attaque),
     **Fuir** (50 % de réussite). Le monstre riposte selon sa propre précision et
     ne peut pas fuir. Victoire = butin en or ; défaite à 0 PV = niveau recommencé.
-- 🧰 **Équipement & inventaire (façon Diablo)** : les emplacements **arme** et
-  **armure** équipés sont affichés à côté du sac. Le joueur démarre avec un
-  **glaive** et une **tunique en tissu** (1 armure). L'**armure mitige** tous les
-  dégâts reçus (traps, monstres, Minotaure). Le sac contient au départ
-  **3 potions mineures** (+5 PV), à boire depuis l'inventaire.
+- 🧰 **Équipement & inventaire (façon Diablo)** : **5 emplacements**
+  d'équipement (tête, corps, jambes, bras droit, bras gauche) affichés à côté du
+  **sac de 5 places**. On peut **équiper / déséquiper** les objets, et **jeter**
+  au sol / **ramasser** (les objets déposés restent sur la case). Si le sac est
+  plein, un trésor reste au sol. Le joueur démarre avec un **glaive** (main
+  droite) et une **tunique en tissu** (corps, 1 armure) équipés, plus
+  **3 potions mineures** (+5 PV) dans le sac. L'**armure mitige** tous les dégâts
+  reçus. Des équipements supplémentaires (casque, jambières, bouclier, dague) se
+  trouvent dans les trésors.
 - 📱 **Verrou paysage** : le jeu invite à tourner l'appareil en portrait
   (`orientation: landscape` + tentative de verrouillage + invite plein écran).
 - 🕹️ **Déplacement case par case** (flèches, ZQSD, WASD, ou croix tactile).
@@ -94,7 +98,7 @@ js/
   rng.js       PRNG déterministe seedé (mulberry32 + hash)
   maze.js      Génération du labyrinthe et des terrains
   events.js    Détermination des événements (sol + 9 voisins + aléa)
-  player.js    Aventurier : PV, or, inventaire, arme
+  player.js    Aventurier : PV, or, sac (5 places), équipement (5 slots)
   combat.js    Combat au tour par tour (attaquer / parer / fuir)
   minotaur.js  IA du Minotaure (patrouille / détection / poursuite)
   render.js    Rendu canvas topdown avec caméra et brouillard
