@@ -15,9 +15,10 @@ Le jeu est une **PWA** installable et jouable hors-ligne.
   - ⚠️ **Pièges** (dégâts),
   - ⚔️ **Rencontres de monstres** → **combat** (voir ci-dessous),
   - 💰 **Trésors** (or, objets, potions de soin).
-- ⚔️ **Combat en modale** (style Pokémon : ennemi en haut à droite, joueur en
-  bas à gauche). Le joueur possède par défaut un **glaive** (3 dégâts/coup) et
-  dispose de trois actions, aucune garantie à 100 % :
+- ⚔️ **Combat en surimpression** sur la vue 3D : le monstre **surgit au centre**
+  de l'écran et l'**interface de combat s'affiche en bas au milieu** (le décor
+  reste figé derrière). Le joueur possède par défaut un **glaive** (3 dégâts/coup)
+  et dispose de trois actions, aucune garantie à 100 % :
   - **Attaquer** (80 % de toucher), **Parer** (60 % de bloquer l'attaque),
     **Fuir** (50 % de réussite). Le monstre riposte selon sa propre précision et
     ne peut pas fuir. Victoire = butin en or ; défaite à 0 PV = niveau recommencé.
@@ -72,12 +73,10 @@ labyrinthe plein écran, le HUD est en surimpression.
 
 - **Bas gauche** : contrôles 3D — ▲ avancer / ▼ reculer (répétition au maintien),
   ↰ ↱ pivoter à gauche / droite.
-- **Bas centre** : **minimap** (position + orientation, sortie, Minotaure aperçu).
-- **Bas droite** : bouton d'action **Attendre** (passe un tour ; le Minotaure
-  bouge — utile tactiquement).
+- **Bas droite** : **minimap** (position + orientation, sortie, Minotaure aperçu).
 - **Haut gauche** : points de vie, or, tours, seed.
-- **Haut droite** : 🎒 inventaire · 📜 journal des événements · ⚙️ menu (seed,
-  recommencer, légende) — s'ouvrent en tiroir latéral.
+- **Haut droite** : ⏳ **Attendre** (passe un tour) · 🎒 inventaire · 📜 journal ·
+  ⚙️ menu (seed, recommencer, légende) — les tiroirs s'ouvrent sur le côté.
 - Les événements s'affichent en **toasts** éphémères sur la vue principale.
 
 ## Commandes

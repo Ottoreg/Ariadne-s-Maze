@@ -211,32 +211,6 @@ body.alert { background: #3a0f12; }
 .ctrl-btn.right { grid-column: 3; grid-row: 2; }
 .ctrl-btn.down { grid-column: 2; grid-row: 3; }
 
-/* Action — bas droite. */
-#actions {
-  right: calc(var(--safe-r) + 14px);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-.action-btn {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: rgba(46, 196, 182, 0.16);
-  backdrop-filter: blur(4px);
-  color: var(--text);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  gap: 2px;
-  transition: background 0.08s, transform 0.05s;
-}
-.action-btn:active { background: var(--accent); color: #0f0f16; transform: scale(0.94); }
-.action-btn .glyph { font-size: 30px; line-height: 1; }
-.action-btn .label { font-size: 11px; letter-spacing: 0.3px; }
-
 /* ---------- Tiroir latéral (inventaire / journal / menu) ---------- */
 #scrim {
   position: absolute;
@@ -376,112 +350,112 @@ kbd {
   font-family: ui-monospace, monospace;
 }
 
-/* ---------- Modale de combat (style Pokémon) ---------- */
-#combat {
+/* ---------- Combat en surimpression sur la vue 3D ---------- */
+/* Le monstre surgit au centre ; l'interface de combat est en bas au milieu.
+   Le décor 3D reste visible derrière (assombri sur les bords). */
+#battle {
   position: absolute;
   inset: 0;
   z-index: 14;
   display: none;
-  flex-direction: column;
-  background: rgba(8, 8, 14, 0.92);
-  backdrop-filter: blur(3px);
-  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 12px)
-           calc(var(--safe-b) + 12px) calc(var(--safe-l) + 12px);
+  pointer-events: none; /* seuls les enfants interactifs captent le toucher */
+  background: radial-gradient(circle at 50% 40%,
+    rgba(0, 0, 0, 0) 24%, rgba(5, 5, 10, 0.62) 78%);
 }
-#combat.visible { display: flex; }
+#battle.visible { display: block; }
 
-/* Scène : dégradé « arène », ennemi en haut à droite, joueur en bas à gauche. */
-.combat-scene {
-  position: relative;
-  flex: 1;
-  min-height: 120px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background:
-    radial-gradient(120% 90% at 80% 15%, rgba(181, 23, 158, 0.18), transparent 60%),
-    radial-gradient(120% 90% at 20% 85%, rgba(46, 196, 182, 0.16), transparent 60%),
-    linear-gradient(180deg, #201a2b, #14141d);
-  overflow: hidden;
-}
+/* Le d-pad est masqué pendant le combat. */
+body.in-combat #dpad { display: none; }
 
-.combatant {
+/* --- Monstre au centre --- */
+#battle-enemy {
   position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 62%;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: min(320px, 80vw);
 }
-.combatant.enemy { top: 12px; right: 14px; }
-.combatant.player { bottom: 12px; left: 14px; }
-
-.cbt-sprite {
-  font-size: 52px;
-  line-height: 1;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-}
-.combatant.enemy .cbt-sprite { animation: bob 2.4s ease-in-out infinite; }
-.combatant.player .cbt-sprite { transform: scaleX(-1); }
-@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-/* Secousse quand un combattant est touché. */
-.cbt-sprite.hit { animation: shake 0.3s; }
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-.combatant.player .cbt-sprite.hit { animation: shake-flip 0.3s; }
-@keyframes shake-flip {
-  0%,100% { transform: scaleX(-1) translateX(0); }
-  25% { transform: scaleX(-1) translateX(-5px); }
-  75% { transform: scaleX(-1) translateX(5px); }
-}
-
-.cbt-info {
+.be-head {
+  display: inline-block;
   background: rgba(15, 15, 22, 0.85);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 6px 10px;
-  min-width: 128px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
 }
-.cbt-name { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-.cbt-hp {
-  height: 9px;
+.be-name { display: block; font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.be-hp {
+  width: 180px;
+  max-width: 60vw;
+  height: 10px;
   background: #101018;
   border-radius: 5px;
   overflow: hidden;
   border: 1px solid var(--border);
 }
-.cbt-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s; }
-.cbt-hp-fill.enemy { background: #e74c3c; }
-.cbt-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.be-hp-fill { height: 100%; width: 100%; background: #e74c3c; transition: width 0.3s; }
+.be-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-.combat-log {
-  height: 74px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: var(--panel);
+.be-sprite {
+  font-size: clamp(64px, 16vh, 120px);
+  line-height: 1;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+  animation: bob 2.4s ease-in-out infinite;
+}
+/* Apparition du monstre (« surgit »). */
+#battle.surge .be-sprite { animation: surge 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes surge {
+  0% { transform: scale(0.2) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.be-sprite.hit { animation: shake 0.3s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* --- Interface de combat, en bas au milieu --- */
+#battle-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-b) + 12px);
+  transform: translateX(-50%);
+  width: min(540px, 94vw);
+  pointer-events: auto;
+  background: rgba(18, 18, 26, 0.92);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow-y: auto;
-  font-size: 13px;
-  line-height: 1.45;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  backdrop-filter: blur(6px);
 }
-.combat-log .cl { opacity: 0.6; }
-.combat-log .cl:last-child { opacity: 1; color: var(--text); }
+.bp-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.bp-player { flex-shrink: 0; width: 150px; }
+.bp-label { font-size: 11px; color: var(--muted); }
+.bp-hp {
+  height: 10px;
+  background: #101018;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 3px 0 2px;
+}
+.bp-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s, background 0.3s; }
+.bp-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bp-log {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text);
+}
 
-.combat-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-.combat-actions button {
-  padding: 13px 8px;
-  border-radius: 12px;
+.bp-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bp-actions button {
+  padding: 12px 8px;
+  border-radius: 11px;
   border: 1px solid var(--border);
   background: var(--panel-2);
   color: var(--text);
@@ -490,19 +464,19 @@ kbd {
   cursor: pointer;
   transition: background 0.1s, transform 0.05s, opacity 0.1s;
 }
-.combat-actions button .glyph { font-size: 17px; }
-.combat-actions button:active { transform: scale(0.96); background: #2e2e42; }
+.bp-actions button .glyph { font-size: 16px; }
+.bp-actions button:active { transform: scale(0.96); background: #2e2e42; }
 #cbt-attack { border-color: rgba(231, 76, 60, 0.5); }
 #cbt-parry { border-color: rgba(52, 152, 219, 0.5); }
 #cbt-flee { border-color: rgba(241, 196, 15, 0.5); }
-.combat-actions button:disabled { opacity: 0.4; pointer-events: none; }
+.bp-actions button:disabled { opacity: 0.4; pointer-events: none; }
 
-/* Paysage court : on compacte la scène de combat. */
-@media (orientation: landscape) and (max-height: 480px) {
-  .cbt-sprite { font-size: 40px; }
-  .combat-log { height: 52px; }
-  .combat-actions button { padding: 10px 6px; }
-  .cbt-info { min-width: 108px; padding: 5px 8px; }
+/* Paysage court : monstre un peu plus haut, panneau compact. */
+@media (orientation: landscape) and (max-height: 460px) {
+  #battle-enemy { top: 8%; }
+  .be-sprite { font-size: clamp(52px, 20vh, 96px); }
+  .bp-top { margin-bottom: 8px; }
+  .bp-actions button { padding: 9px 6px; }
 }
 
 /* ---------- Overlay de fin ---------- */
@@ -543,22 +517,14 @@ kbd {
 @media (orientation: landscape) and (max-height: 480px) {
   #dpad { width: 132px; height: 132px; gap: 5px; }
   .ctrl-btn { font-size: 18px; border-radius: 12px; }
-  .action-btn { width: 82px; height: 82px; }
-  .action-btn .glyph { font-size: 26px; }
   .hp-bar { width: 96px; }
   #status { padding: 6px 8px; }
   .icon-btn { width: 38px; height: 38px; font-size: 17px; }
 }
 
-/* Très peu de hauteur : on masque le libellé de l'action pour gagner de la place. */
-@media (orientation: landscape) and (max-height: 380px) {
-  .action-btn .label { display: none; }
-  .action-btn { width: 68px; height: 68px; }
-}
-
 /* ---------- Écran large (desktop) : contrôles un peu plus discrets ---------- */
 @media (min-width: 900px) and (pointer: fine) {
-  #dpad, #actions { opacity: 0.9; }
+  #dpad { opacity: 0.9; }
 }
 
 /* ---------- Verrou paysage : invite à tourner l'appareil en portrait ---------- */
@@ -621,6 +587,7 @@ kbd {
         </div>
       </div>
       <div id="top-buttons">
+        <button class="icon-btn" id="wait-btn" aria-label="Attendre un tour">⏳</button>
         <button class="icon-btn" data-panel="inventory" aria-label="Inventaire">🎒</button>
         <button class="icon-btn" data-panel="journal" aria-label="Journal">📜</button>
         <button class="icon-btn" data-panel="menu" aria-label="Menu">⚙️</button>
@@ -636,13 +603,6 @@ kbd {
       <button data-dir="left" class="ctrl-btn left" aria-label="Pivoter à gauche">↰</button>
       <button data-dir="right" class="ctrl-btn right" aria-label="Pivoter à droite">↱</button>
       <button data-dir="down" class="ctrl-btn down" aria-label="Reculer">▼</button>
-    </div>
-
-    <!-- Grappe d'action — bas DROITE -->
-    <div id="actions" class="controls">
-      <button id="wait-btn" class="action-btn" aria-label="Attendre un tour">
-        <span class="glyph">⏳</span><span class="label">Attendre</span>
-      </button>
     </div>
 
     <!-- Tiroir latéral : inventaire / journal / menu -->
@@ -707,34 +667,34 @@ kbd {
     </div>
     <div id="scrim"></div>
 
-    <!-- Modale de combat (style Pokémon : ennemi en haut à droite,
-         joueur en bas à gauche) -->
-    <div id="combat" aria-hidden="true">
-      <div class="combat-scene">
-        <!-- Ennemi : haut droite -->
-        <div class="combatant enemy">
-          <div class="cbt-info">
-            <span class="cbt-name" id="cbt-enemy-name">Monstre</span>
-            <div class="cbt-hp"><div class="cbt-hp-fill enemy" id="cbt-enemy-hp"></div></div>
-            <span class="cbt-hp-text" id="cbt-enemy-hp-text">0 / 0</span>
-          </div>
-          <div class="cbt-sprite" id="cbt-enemy-sprite">👹</div>
+    <!-- Combat en surimpression sur la vue 3D : le monstre surgit au centre,
+         l'interface de combat s'affiche en bas au milieu. -->
+    <div id="battle" aria-hidden="true">
+      <!-- Le monstre surgit au centre de l'écran -->
+      <div id="battle-enemy">
+        <div class="be-head">
+          <span class="be-name" id="cbt-enemy-name">Monstre</span>
+          <div class="be-hp"><div class="be-hp-fill" id="cbt-enemy-hp"></div></div>
+          <span class="be-hp-text" id="cbt-enemy-hp-text">0 / 0</span>
         </div>
-        <!-- Joueur : bas gauche -->
-        <div class="combatant player">
-          <div class="cbt-sprite" id="cbt-player-sprite">🗡️</div>
-          <div class="cbt-info">
-            <span class="cbt-name">Aventurier</span>
-            <div class="cbt-hp"><div class="cbt-hp-fill" id="cbt-player-hp"></div></div>
-            <span class="cbt-hp-text" id="cbt-player-hp-text">0 / 0</span>
-          </div>
-        </div>
+        <div class="be-sprite" id="cbt-enemy-sprite">👹</div>
       </div>
-      <div class="combat-log" id="combat-log"></div>
-      <div class="combat-actions">
-        <button id="cbt-attack"><span class="glyph">⚔️</span> Attaquer</button>
-        <button id="cbt-parry"><span class="glyph">🛡️</span> Parer</button>
-        <button id="cbt-flee"><span class="glyph">🏃</span> Fuir</button>
+
+      <!-- Interface de combat, en bas au milieu -->
+      <div id="battle-panel">
+        <div class="bp-top">
+          <div class="bp-player">
+            <span class="bp-label">Aventurier</span>
+            <div class="bp-hp"><div class="bp-hp-fill" id="cbt-player-hp"></div></div>
+            <span class="bp-hp-text" id="cbt-player-hp-text">0 / 0</span>
+          </div>
+          <div class="bp-log" id="combat-log"></div>
+        </div>
+        <div class="bp-actions">
+          <button id="cbt-attack"><span class="glyph">⚔️</span> Attaquer</button>
+          <button id="cbt-parry"><span class="glyph">🛡️</span> Parer</button>
+          <button id="cbt-flee"><span class="glyph">🏃</span> Fuir</button>
+        </div>
       </div>
     </div>
 
@@ -1686,6 +1646,10 @@ class Renderer3D {
       ctx.fillRect(c * COL_WIDTH, y0, COL_WIDTH + 1, y1 - y0);
     }
 
+    // Pendant un combat, on fige le décor (pas de sprites monde ni minimap) :
+    // le monstre et l'interface sont gérés en surimpression HTML.
+    if (game.inCombat) return;
+
     // --- Sprites (Minotaure, sortie, objets au sol) ---
     const sprites = this._collectSprites(game);
     // Distance au carré pour trier du plus loin au plus proche.
@@ -1713,17 +1677,21 @@ class Renderer3D {
 
       const bright = Math.max(0.25, 1 - transformY / FOG_DIST);
       ctx.save();
-      ctx.globalAlpha = Math.min(1, bright + 0.1);
-      ctx.fillStyle = shade(s.color, bright - 1);
-      ctx.beginPath();
-      ctx.ellipse(screenX, cy, spriteH * 0.34, spriteH * 0.42, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = bright;
-      ctx.fillStyle = '#fff';
-      ctx.font = `${Math.floor(spriteH * 0.55)}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(s.glyph, screenX, cy);
+      if (s.kind === 'chest') {
+        this._drawChest(ctx, screenX, cy, spriteH, bright);
+      } else {
+        ctx.globalAlpha = Math.min(1, bright + 0.1);
+        ctx.fillStyle = shade(s.color, bright - 1);
+        ctx.beginPath();
+        ctx.ellipse(screenX, cy, spriteH * 0.34, spriteH * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = bright;
+        ctx.fillStyle = '#fff';
+        ctx.font = `${Math.floor(spriteH * 0.55)}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(s.glyph, screenX, cy);
+      }
       ctx.restore();
     }
 
@@ -1741,22 +1709,55 @@ class Renderer3D {
     if (game.visited[m.y][m.x] || m.chasing) {
       list.push({ x: m.x + 0.5, y: m.y + 0.5, color: '#c0392b', glyph: '🐂', scale: 1.05 });
     }
-    // Objets déposés au sol.
+    // Objets déposés au sol : petit coffre.
     for (const key of game.groundItems.keys()) {
       const [gx, gy] = key.split(',').map(Number);
-      list.push({ x: gx + 0.5, y: gy + 0.5, color: '#d9a441', glyph: '📦', scale: 0.55, low: true });
+      list.push({ x: gx + 0.5, y: gy + 0.5, kind: 'chest', scale: 0.5, low: true });
     }
     return list;
   }
 
-  // Minimap compacte en bas au centre.
+  // Dessine un petit coffre (billboard) à l'écran.
+  _drawChest(ctx, cx, cy, spriteH, bright) {
+    const w = spriteH * 0.62;
+    const h = spriteH * 0.4;
+    const x = cx - w / 2;
+    const y = cy - h / 2 + spriteH * 0.06;
+    const body = shade('#8a5a2b', bright - 1);
+    const lid = shade('#a56b33', bright - 1);
+    const band = shade('#4a2f16', bright - 1);
+    const gold = shade('#ffd166', bright - 1);
+    // Corps.
+    ctx.fillStyle = body;
+    ctx.fillRect(x, y, w, h);
+    // Couvercle bombé.
+    ctx.fillStyle = lid;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(cx, y - h * 0.55, x + w, y);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x, y);
+    ctx.fill();
+    ctx.fillRect(x, y - 1, w, h * 0.18);
+    // Ferrures verticales + serrure.
+    ctx.fillStyle = band;
+    ctx.fillRect(x + w * 0.44, y - h * 0.5, w * 0.12, h * 1.5);
+    ctx.fillStyle = gold;
+    ctx.fillRect(x + w * 0.45, y + h * 0.28, w * 0.1, h * 0.28);
+    // Contour.
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+  }
+
+  // Minimap compacte en bas à droite.
   _drawMinimap(game) {
     const ctx = this.ctx;
     const maze = game.maze;
     const size = maze.size;
     const cell = Math.max(2, Math.floor(120 / size));
     const dim = cell * size;
-    const ox = (this.viewW - dim) / 2;
+    const ox = this.viewW - dim - 16;
     const oy = this.viewH - dim - 16;
 
     ctx.save();
@@ -2293,8 +2294,8 @@ const drawer = $('drawer');
 const drawerTitle = $('drawer-title');
 const scrim = $('scrim');
 
-// Éléments de la modale de combat.
-const combatEl = $('combat');
+// Éléments du combat (surimpression sur la vue 3D).
+const combatEl = $('battle');
 const combatLog = $('combat-log');
 const cbtEnemyName = $('cbt-enemy-name');
 const cbtEnemySprite = $('cbt-enemy-sprite');
@@ -2509,8 +2510,8 @@ function flashDetection() {
 }
 
 function showOverlay(g, won) {
-  // La modale de combat cède la place à l'écran de fin.
-  combatEl.classList.remove('visible');
+  // Le combat cède la place à l'écran de fin.
+  closeBattle();
   overlayTitle.textContent = won ? 'Niveau terminé 🎉' : 'Game Over 💀';
   overlayText.textContent = won
     ? `Sortie atteinte en ${g.turn} tours avec ${g.player.gold} or.`
@@ -2520,7 +2521,7 @@ function showOverlay(g, won) {
   overlay.classList.add('visible');
 }
 
-// ---------- Modale de combat ----------
+// ---------- Combat (le monstre surgit au centre, interface en bas) ----------
 let combatClosing = null;
 
 function openCombat(c) {
@@ -2530,8 +2531,11 @@ function openCombat(c) {
   combatLog.innerHTML = '';
   setActionsDisabled(false);
   renderCombat(c, false);
-  combatEl.classList.add('visible');
+  document.body.classList.add('in-combat'); // masque le d-pad, fige le décor
+  combatEl.classList.add('visible', 'surge'); // animation d'apparition du monstre
   combatEl.setAttribute('aria-hidden', 'false');
+  // Retire la classe d'apparition après l'animation.
+  setTimeout(() => combatEl.classList.remove('surge'), 500);
 }
 
 function renderCombat(c, animate) {
@@ -2543,42 +2547,36 @@ function renderCombat(c, animate) {
   cbtEnemyHpText.textContent = `${c.enemy.hp} / ${c.enemy.maxHp}`;
   cbtPlayerHpText.textContent = `${p.hp} / ${p.maxHp}`;
 
-  // Journal du combat (on affiche l'historique complet du combat en cours).
-  combatLog.innerHTML = '';
-  for (const line of c.log) {
-    const div = document.createElement('div');
-    div.className = 'cl';
-    div.textContent = line;
-    combatLog.appendChild(div);
-  }
-  combatLog.scrollTop = combatLog.scrollHeight;
+  // On n'affiche que la dernière ligne du journal (sous le monstre).
+  combatLog.textContent = c.log[c.log.length - 1] || '';
 
   if (animate) {
-    // Petite secousse sur le dernier combattant touché.
     const last = c.log[c.log.length - 1] || '';
-    if (last.includes('te touche') || last.includes('pares')) bump(cbtPlayerSprite());
+    // Le monstre encaisse un coup -> il tremble.
     if (last.includes('Tu frappes')) bump(cbtEnemySprite);
+    // Le joueur est touché -> flash rouge de l'écran.
+    if (last.includes('te touche')) flashDetection();
   }
 }
-
-function cbtPlayerSprite() { return $('cbt-player-sprite'); }
 
 function bump(el) {
   if (!el) return;
   el.classList.remove('hit');
-  // Force le reflow pour rejouer l'animation.
-  void el.offsetWidth;
+  void el.offsetWidth; // force le reflow pour rejouer l'animation
   el.classList.add('hit');
+}
+
+function closeBattle() {
+  combatEl.classList.remove('visible', 'surge');
+  combatEl.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('in-combat');
 }
 
 function endCombat(c) {
   setActionsDisabled(true);
-  // On laisse le temps de lire l'issue avant de fermer la modale.
+  // On laisse le temps de lire l'issue avant de refermer.
   const delay = c.result === 'lose' ? 500 : 950;
-  combatClosing = setTimeout(() => {
-    combatEl.classList.remove('visible');
-    combatEl.setAttribute('aria-hidden', 'true');
-  }, delay);
+  combatClosing = setTimeout(closeBattle, delay);
 }
 
 function setActionsDisabled(v) {
