@@ -2,14 +2,14 @@
 // surimpression, tiroirs, contrôles tactiles pensés pour le mobile paysage).
 
 import { Game } from './game.js';
-import { Renderer } from './render.js';
+import { Renderer3D } from './raycaster.js';
 import { EVENT } from './events.js';
 import { itemDef } from './player.js';
 
 const $ = (id) => document.getElementById(id);
 
 const canvas = $('game');
-const renderer = new Renderer(canvas);
+const renderer = new Renderer3D(canvas);
 
 // Éléments du HUD.
 const hpFill = $('hp-fill');
@@ -379,7 +379,16 @@ document.querySelectorAll('[data-panel]').forEach((btn) => {
 $('drawer-close').addEventListener('click', closePanel);
 scrim.addEventListener('click', closePanel);
 
-// ---------- Contrôles clavier ----------
+// ---------- Contrôles (vue 3D : avancer/reculer + pivoter) ----------
+// data-dir : up = avancer, down = reculer, left = pivoter à gauche,
+//            right = pivoter à droite.
+const ACTIONS = {
+  up: () => game.forward(),
+  down: () => game.back(),
+  left: () => game.turnLeft(),
+  right: () => game.turnRight(),
+};
+
 const KEY_DIRS = {
   ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right',
   w: 'up', s: 'down', a: 'left', d: 'right',
@@ -389,12 +398,12 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && openPanel) { closePanel(); return; }
   if (e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); game.wait(); return; }
   const dir = KEY_DIRS[e.key];
-  if (dir) { e.preventDefault(); game.move(dir); }
+  if (dir) { e.preventDefault(); ACTIONS[dir](); }
 });
 
-// ---------- Contrôles tactiles avec répétition au maintien ----------
-// Chaque bouton déclenche l'action au contact, puis la répète tant qu'on
-// maintient le doigt appuyé (confort de jeu sur mobile).
+// ---------- Contrôles tactiles ----------
+// Avancer/reculer se répètent au maintien ; pivoter agit à chaque appui
+// (rotation de 90° par pression, plus lisible qu'une rotation continue).
 function bindHold(el, action) {
   let timer = null;
   let repeat = null;
@@ -402,26 +411,24 @@ function bindHold(el, action) {
     e.preventDefault();
     if (game.over) return;
     action();
-    // Délai avant répétition, puis cadence régulière.
-    timer = setTimeout(() => {
-      repeat = setInterval(action, 150);
-    }, 320);
+    timer = setTimeout(() => { repeat = setInterval(action, 160); }, 320);
   };
-  const stop = () => {
-    clearTimeout(timer);
-    clearInterval(repeat);
-    timer = repeat = null;
-  };
+  const stop = () => { clearTimeout(timer); clearInterval(repeat); timer = repeat = null; };
   el.addEventListener('pointerdown', start);
   el.addEventListener('pointerup', stop);
   el.addEventListener('pointerleave', stop);
   el.addEventListener('pointercancel', stop);
-  // Évite le menu contextuel sur appui long mobile.
-  el.addEventListener('contextmenu', (e) => e.preventDefault());
+  el.addEventListener('contextmenu', (ev) => ev.preventDefault());
+}
+function bindTap(el, action) {
+  el.addEventListener('pointerdown', (e) => { e.preventDefault(); action(); });
+  el.addEventListener('contextmenu', (ev) => ev.preventDefault());
 }
 
 document.querySelectorAll('[data-dir]').forEach((btn) => {
-  bindHold(btn, () => game.move(btn.dataset.dir));
+  const dir = btn.dataset.dir;
+  if (dir === 'up' || dir === 'down') bindHold(btn, ACTIONS[dir]);
+  else bindTap(btn, ACTIONS[dir]);
 });
 bindHold($('wait-btn'), () => game.wait());
 

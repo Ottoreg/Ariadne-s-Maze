@@ -1,9 +1,9 @@
 # Ariadne's Maze
 
-Un jeu web en vue de dessus (topdown, façon Zelda / Pokémon) où l'on incarne un
-aventurier explorant un labyrinthe généré par **seed**, peuplé d'événements et
-hanté par le **Minotaure**. Le jeu est une **PWA** installable et jouable
-hors-ligne.
+Un jeu web où l'on incarne un aventurier explorant un labyrinthe généré par
+**seed**, peuplé d'événements et hanté par le **Minotaure**. La vue est en
+**3D à la première personne « façon Doom 1993 »** (raycasting), avec une minimap.
+Le jeu est une **PWA** installable et jouable hors-ligne.
 
 ## Fonctionnalités de cette base
 
@@ -32,7 +32,10 @@ hors-ligne.
   trouvent dans les trésors.
 - 📱 **Verrou paysage** : le jeu invite à tourner l'appareil en portrait
   (`orientation: landscape` + tentative de verrouillage + invite plein écran).
-- 🕹️ **Déplacement case par case** (flèches, ZQSD, WASD, ou croix tactile).
+- 🕹️ **Vue 3D première personne (raycasting « à la Doom »)** : murs texturés/
+  ombrés selon la distance et la zone, sol/plafond, sprites (Minotaure, sortie,
+  objets au sol) avec occlusion, et **minimap**. Déplacement case par case :
+  **avancer/reculer** (consomment un tour) et **pivoter** de 90° (gratuit).
 - ❤️ **Points de vie** : à 0, l'aventurier meurt et le niveau recommence.
 - 🐂 **Minotaure** mobile : il patrouille, détecte le joueur dans un rayon donné,
   le poursuit et inflige de gros dégâts au contact.
@@ -67,7 +70,9 @@ saisir la seed dans le **menu** (⚙️) puis **Générer**.
 Pensée pour le **mobile en mode paysage** : la vue principale est occupée par le
 labyrinthe plein écran, le HUD est en surimpression.
 
-- **Bas gauche** : croix directionnelle (déplacement, avec répétition au maintien).
+- **Bas gauche** : contrôles 3D — ▲ avancer / ▼ reculer (répétition au maintien),
+  ↰ ↱ pivoter à gauche / droite.
+- **Bas centre** : **minimap** (position + orientation, sortie, Minotaure aperçu).
 - **Bas droite** : bouton d'action **Attendre** (passe un tour ; le Minotaure
   bouge — utile tactiquement).
 - **Haut gauche** : points de vie, or, tours, seed.
@@ -77,11 +82,12 @@ labyrinthe plein écran, le HUD est en surimpression.
 
 ## Commandes
 
-| Action        | Tactile                     | Clavier                          |
-| ------------- | --------------------------- | -------------------------------- |
-| Se déplacer   | Croix (bas gauche)          | Flèches · `ZQSD` · `WASD`        |
-| Attendre      | Bouton **Attendre**         | `Espace`                         |
-| Panneaux      | 🎒 · 📜 · ⚙️ (haut droite)  | `Échap` pour fermer              |
+| Action            | Tactile                     | Clavier                          |
+| ----------------- | --------------------------- | -------------------------------- |
+| Avancer / reculer | ▲ / ▼ (bas gauche)          | ↑/↓ · `Z`/`S` · `W`/`S`          |
+| Pivoter g/d       | ↰ / ↱ (bas gauche)          | ←/→ · `Q`/`D` · `A`/`D`          |
+| Attendre          | Bouton **Attendre**         | `Espace`                         |
+| Panneaux          | 🎒 · 📜 · ⚙️ (haut droite)  | `Échap` pour fermer              |
 
 Objectif : atteindre la sortie **⚑** en survivant aux pièges, aux monstres et au
 Minotaure.
@@ -101,8 +107,8 @@ js/
   player.js    Aventurier : PV, or, sac (5 places), équipement (5 slots)
   combat.js    Combat au tour par tour (attaquer / parer / fuir)
   minotaur.js  IA du Minotaure (patrouille / détection / poursuite)
-  render.js    Rendu canvas topdown avec caméra et brouillard
-  game.js      Contrôleur : tours, événements, mort/relance
+  raycaster.js Rendu 3D première personne (raycasting) + minimap
+  game.js      Contrôleur : tours, orientation, événements, mort/relance
   main.js      Liaison DOM (HUD, contrôles, PWA)
 ```
 

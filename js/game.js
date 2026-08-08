@@ -48,6 +48,9 @@ export class Game {
     this._combatCell = null;   // case où se déroule le combat
     this._combatReturn = null; // case de repli en cas de fuite réussie
 
+    // Orientation en vue 3D (0=Nord, 1=Est, 2=Sud, 3=Ouest).
+    this.facing = this._initFacing();
+
     this._reveal(this.player.x, this.player.y);
     this._resolveEvent(this.player.x, this.player.y, true); // entrée = sûre
     this.emit('log', `Bienvenue dans le labyrinthe (seed : ${this.seed}). Trouve la sortie ⚑ !`);
@@ -80,6 +83,36 @@ export class Game {
   }
   emit(event, payload) {
     (this.listeners[event] || []).forEach((fn) => fn(payload));
+  }
+
+  // Oriente le joueur vers une première case ouverte (pour la vue 3D).
+  _initFacing() {
+    const order = [1, 2, 3, 0]; // Est, Sud, Ouest, Nord
+    const delta = { 0: [0, -1], 1: [1, 0], 2: [0, 1], 3: [-1, 0] };
+    for (const f of order) {
+      const [dx, dy] = delta[f];
+      if (this.maze.isFloor(this.player.x + dx, this.player.y + dy)) return f;
+    }
+    return 1;
+  }
+
+  // Direction absolue (up/down/left/right) correspondant à une orientation.
+  _facingToDir(f) {
+    return ['up', 'right', 'down', 'left'][f];
+  }
+
+  // Vue 3D : avancer / reculer (consomment un tour) et pivoter (gratuit).
+  forward() { this.move(this._facingToDir(this.facing)); }
+  back() { this.move(this._facingToDir((this.facing + 2) % 4)); }
+  turnLeft() {
+    if (this.over || this.inCombat) return;
+    this.facing = (this.facing + 3) % 4;
+    this.emit('update');
+  }
+  turnRight() {
+    if (this.over || this.inCombat) return;
+    this.facing = (this.facing + 1) % 4;
+    this.emit('update');
   }
 
   // Déplacement du joueur d'une case. dir ∈ {up,down,left,right}.

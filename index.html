@@ -47,12 +47,12 @@
     <!-- Notifications d'événements sur la vue principale -->
     <div id="toasts"></div>
 
-    <!-- Croix directionnelle (déplacement) — bas GAUCHE -->
+    <!-- Contrôles (vue 3D) — bas GAUCHE : avancer / reculer + pivoter -->
     <div id="dpad" class="controls">
-      <button data-dir="up" class="ctrl-btn up" aria-label="Haut">▲</button>
-      <button data-dir="left" class="ctrl-btn left" aria-label="Gauche">◀</button>
-      <button data-dir="right" class="ctrl-btn right" aria-label="Droite">▶</button>
-      <button data-dir="down" class="ctrl-btn down" aria-label="Bas">▼</button>
+      <button data-dir="up" class="ctrl-btn up" aria-label="Avancer">▲</button>
+      <button data-dir="left" class="ctrl-btn left" aria-label="Pivoter à gauche">↰</button>
+      <button data-dir="right" class="ctrl-btn right" aria-label="Pivoter à droite">↱</button>
+      <button data-dir="down" class="ctrl-btn down" aria-label="Reculer">▼</button>
     </div>
 
     <!-- Grappe d'action — bas DROITE -->
@@ -109,16 +109,15 @@
             <button id="restart-btn">↻ Recommencer le niveau</button>
           </div>
           <div class="legend">
-            <h3>Légende</h3>
+            <h3>Vue 3D & commandes</h3>
             <ul>
-              <li><span class="dot" style="background:#2ec4b6"></span> Aventurier</li>
-              <li><span class="dot" style="background:#c0392b"></span> Minotaure</li>
-              <li><span class="dot" style="background:#ffd166"></span> Trésor</li>
-              <li><span class="dot" style="background:#e07a5f"></span> Piège</li>
-              <li><span class="dot" style="background:#b5179e"></span> Monstre</li>
-              <li>⚑ Sortie · ⌂ Entrée</li>
+              <li>▲ Avancer · ▼ Reculer</li>
+              <li>↰ ↱ Pivoter (gauche / droite)</li>
+              <li>Clavier : flèches · ZQSD · WASD</li>
+              <li><kbd>Espace</kbd> Attendre un tour</li>
             </ul>
-            <p class="hint">Clavier : flèches · ZQSD · WASD · <kbd>Espace</kbd> pour attendre.</p>
+            <p class="hint">La minimap en bas indique ta position (flèche), la
+              sortie ⚑ et le Minotaure. Explore le labyrinthe à la première personne !</p>
           </div>
         </section>
       </div>
