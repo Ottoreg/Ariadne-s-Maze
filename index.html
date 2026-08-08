@@ -38,6 +38,7 @@
         </div>
       </div>
       <div id="top-buttons">
+        <button class="icon-btn" id="wait-btn" aria-label="Attendre un tour">⏳</button>
         <button class="icon-btn" data-panel="inventory" aria-label="Inventaire">🎒</button>
         <button class="icon-btn" data-panel="journal" aria-label="Journal">📜</button>
         <button class="icon-btn" data-panel="menu" aria-label="Menu">⚙️</button>
@@ -53,13 +54,6 @@
       <button data-dir="left" class="ctrl-btn left" aria-label="Pivoter à gauche">↰</button>
       <button data-dir="right" class="ctrl-btn right" aria-label="Pivoter à droite">↱</button>
       <button data-dir="down" class="ctrl-btn down" aria-label="Reculer">▼</button>
-    </div>
-
-    <!-- Grappe d'action — bas DROITE -->
-    <div id="actions" class="controls">
-      <button id="wait-btn" class="action-btn" aria-label="Attendre un tour">
-        <span class="glyph">⏳</span><span class="label">Attendre</span>
-      </button>
     </div>
 
     <!-- Tiroir latéral : inventaire / journal / menu -->
@@ -124,34 +118,34 @@
     </div>
     <div id="scrim"></div>
 
-    <!-- Modale de combat (style Pokémon : ennemi en haut à droite,
-         joueur en bas à gauche) -->
-    <div id="combat" aria-hidden="true">
-      <div class="combat-scene">
-        <!-- Ennemi : haut droite -->
-        <div class="combatant enemy">
-          <div class="cbt-info">
-            <span class="cbt-name" id="cbt-enemy-name">Monstre</span>
-            <div class="cbt-hp"><div class="cbt-hp-fill enemy" id="cbt-enemy-hp"></div></div>
-            <span class="cbt-hp-text" id="cbt-enemy-hp-text">0 / 0</span>
-          </div>
-          <div class="cbt-sprite" id="cbt-enemy-sprite">👹</div>
+    <!-- Combat en surimpression sur la vue 3D : le monstre surgit au centre,
+         l'interface de combat s'affiche en bas au milieu. -->
+    <div id="battle" aria-hidden="true">
+      <!-- Le monstre surgit au centre de l'écran -->
+      <div id="battle-enemy">
+        <div class="be-head">
+          <span class="be-name" id="cbt-enemy-name">Monstre</span>
+          <div class="be-hp"><div class="be-hp-fill" id="cbt-enemy-hp"></div></div>
+          <span class="be-hp-text" id="cbt-enemy-hp-text">0 / 0</span>
         </div>
-        <!-- Joueur : bas gauche -->
-        <div class="combatant player">
-          <div class="cbt-sprite" id="cbt-player-sprite">🗡️</div>
-          <div class="cbt-info">
-            <span class="cbt-name">Aventurier</span>
-            <div class="cbt-hp"><div class="cbt-hp-fill" id="cbt-player-hp"></div></div>
-            <span class="cbt-hp-text" id="cbt-player-hp-text">0 / 0</span>
-          </div>
-        </div>
+        <div class="be-sprite" id="cbt-enemy-sprite">👹</div>
       </div>
-      <div class="combat-log" id="combat-log"></div>
-      <div class="combat-actions">
-        <button id="cbt-attack"><span class="glyph">⚔️</span> Attaquer</button>
-        <button id="cbt-parry"><span class="glyph">🛡️</span> Parer</button>
-        <button id="cbt-flee"><span class="glyph">🏃</span> Fuir</button>
+
+      <!-- Interface de combat, en bas au milieu -->
+      <div id="battle-panel">
+        <div class="bp-top">
+          <div class="bp-player">
+            <span class="bp-label">Aventurier</span>
+            <div class="bp-hp"><div class="bp-hp-fill" id="cbt-player-hp"></div></div>
+            <span class="bp-hp-text" id="cbt-player-hp-text">0 / 0</span>
+          </div>
+          <div class="bp-log" id="combat-log"></div>
+        </div>
+        <div class="bp-actions">
+          <button id="cbt-attack"><span class="glyph">⚔️</span> Attaquer</button>
+          <button id="cbt-parry"><span class="glyph">🛡️</span> Parer</button>
+          <button id="cbt-flee"><span class="glyph">🏃</span> Fuir</button>
+        </div>
       </div>
     </div>
 

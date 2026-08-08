@@ -202,32 +202,6 @@ body.alert { background: #3a0f12; }
 .ctrl-btn.right { grid-column: 3; grid-row: 2; }
 .ctrl-btn.down { grid-column: 2; grid-row: 3; }
 
-/* Action — bas droite. */
-#actions {
-  right: calc(var(--safe-r) + 14px);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
-}
-.action-btn {
-  width: 96px;
-  height: 96px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: rgba(46, 196, 182, 0.16);
-  backdrop-filter: blur(4px);
-  color: var(--text);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  gap: 2px;
-  transition: background 0.08s, transform 0.05s;
-}
-.action-btn:active { background: var(--accent); color: #0f0f16; transform: scale(0.94); }
-.action-btn .glyph { font-size: 30px; line-height: 1; }
-.action-btn .label { font-size: 11px; letter-spacing: 0.3px; }
-
 /* ---------- Tiroir latéral (inventaire / journal / menu) ---------- */
 #scrim {
   position: absolute;
@@ -367,112 +341,112 @@ kbd {
   font-family: ui-monospace, monospace;
 }
 
-/* ---------- Modale de combat (style Pokémon) ---------- */
-#combat {
+/* ---------- Combat en surimpression sur la vue 3D ---------- */
+/* Le monstre surgit au centre ; l'interface de combat est en bas au milieu.
+   Le décor 3D reste visible derrière (assombri sur les bords). */
+#battle {
   position: absolute;
   inset: 0;
   z-index: 14;
   display: none;
-  flex-direction: column;
-  background: rgba(8, 8, 14, 0.92);
-  backdrop-filter: blur(3px);
-  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 12px)
-           calc(var(--safe-b) + 12px) calc(var(--safe-l) + 12px);
+  pointer-events: none; /* seuls les enfants interactifs captent le toucher */
+  background: radial-gradient(circle at 50% 40%,
+    rgba(0, 0, 0, 0) 24%, rgba(5, 5, 10, 0.62) 78%);
 }
-#combat.visible { display: flex; }
+#battle.visible { display: block; }
 
-/* Scène : dégradé « arène », ennemi en haut à droite, joueur en bas à gauche. */
-.combat-scene {
-  position: relative;
-  flex: 1;
-  min-height: 120px;
-  border-radius: 16px;
-  border: 1px solid var(--border);
-  background:
-    radial-gradient(120% 90% at 80% 15%, rgba(181, 23, 158, 0.18), transparent 60%),
-    radial-gradient(120% 90% at 20% 85%, rgba(46, 196, 182, 0.16), transparent 60%),
-    linear-gradient(180deg, #201a2b, #14141d);
-  overflow: hidden;
-}
+/* Le d-pad est masqué pendant le combat. */
+body.in-combat #dpad { display: none; }
 
-.combatant {
+/* --- Monstre au centre --- */
+#battle-enemy {
   position: absolute;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  max-width: 62%;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  width: min(320px, 80vw);
 }
-.combatant.enemy { top: 12px; right: 14px; }
-.combatant.player { bottom: 12px; left: 14px; }
-
-.cbt-sprite {
-  font-size: 52px;
-  line-height: 1;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-}
-.combatant.enemy .cbt-sprite { animation: bob 2.4s ease-in-out infinite; }
-.combatant.player .cbt-sprite { transform: scaleX(-1); }
-@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-
-/* Secousse quand un combattant est touché. */
-.cbt-sprite.hit { animation: shake 0.3s; }
-@keyframes shake {
-  0%,100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
-}
-.combatant.player .cbt-sprite.hit { animation: shake-flip 0.3s; }
-@keyframes shake-flip {
-  0%,100% { transform: scaleX(-1) translateX(0); }
-  25% { transform: scaleX(-1) translateX(-5px); }
-  75% { transform: scaleX(-1) translateX(5px); }
-}
-
-.cbt-info {
+.be-head {
+  display: inline-block;
   background: rgba(15, 15, 22, 0.85);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: 6px 10px;
-  min-width: 128px;
+  padding: 6px 12px;
+  margin-bottom: 10px;
 }
-.cbt-name { display: block; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-.cbt-hp {
-  height: 9px;
+.be-name { display: block; font-size: 14px; font-weight: 700; margin-bottom: 5px; }
+.be-hp {
+  width: 180px;
+  max-width: 60vw;
+  height: 10px;
   background: #101018;
   border-radius: 5px;
   overflow: hidden;
   border: 1px solid var(--border);
 }
-.cbt-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s; }
-.cbt-hp-fill.enemy { background: #e74c3c; }
-.cbt-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.be-hp-fill { height: 100%; width: 100%; background: #e74c3c; transition: width 0.3s; }
+.be-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-.combat-log {
-  height: 74px;
-  margin-top: 10px;
-  padding: 8px 12px;
-  background: var(--panel);
+.be-sprite {
+  font-size: clamp(64px, 16vh, 120px);
+  line-height: 1;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+  animation: bob 2.4s ease-in-out infinite;
+}
+/* Apparition du monstre (« surgit »). */
+#battle.surge .be-sprite { animation: surge 0.5s cubic-bezier(0.2, 1.4, 0.4, 1); }
+@keyframes surge {
+  0% { transform: scale(0.2) translateY(40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+.be-sprite.hit { animation: shake 0.3s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* --- Interface de combat, en bas au milieu --- */
+#battle-panel {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-b) + 12px);
+  transform: translateX(-50%);
+  width: min(540px, 94vw);
+  pointer-events: auto;
+  background: rgba(18, 18, 26, 0.92);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow-y: auto;
-  font-size: 13px;
-  line-height: 1.45;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  border-radius: 14px;
+  padding: 10px 12px;
+  backdrop-filter: blur(6px);
 }
-.combat-log .cl { opacity: 0.6; }
-.combat-log .cl:last-child { opacity: 1; color: var(--text); }
+.bp-top { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.bp-player { flex-shrink: 0; width: 150px; }
+.bp-label { font-size: 11px; color: var(--muted); }
+.bp-hp {
+  height: 10px;
+  background: #101018;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 3px 0 2px;
+}
+.bp-hp-fill { height: 100%; width: 100%; background: #2ecc71; transition: width 0.3s, background 0.3s; }
+.bp-hp-text { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bp-log {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.35;
+  color: var(--text);
+}
 
-.combat-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-top: 10px;
-}
-.combat-actions button {
-  padding: 13px 8px;
-  border-radius: 12px;
+.bp-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.bp-actions button {
+  padding: 12px 8px;
+  border-radius: 11px;
   border: 1px solid var(--border);
   background: var(--panel-2);
   color: var(--text);
@@ -481,19 +455,19 @@ kbd {
   cursor: pointer;
   transition: background 0.1s, transform 0.05s, opacity 0.1s;
 }
-.combat-actions button .glyph { font-size: 17px; }
-.combat-actions button:active { transform: scale(0.96); background: #2e2e42; }
+.bp-actions button .glyph { font-size: 16px; }
+.bp-actions button:active { transform: scale(0.96); background: #2e2e42; }
 #cbt-attack { border-color: rgba(231, 76, 60, 0.5); }
 #cbt-parry { border-color: rgba(52, 152, 219, 0.5); }
 #cbt-flee { border-color: rgba(241, 196, 15, 0.5); }
-.combat-actions button:disabled { opacity: 0.4; pointer-events: none; }
+.bp-actions button:disabled { opacity: 0.4; pointer-events: none; }
 
-/* Paysage court : on compacte la scène de combat. */
-@media (orientation: landscape) and (max-height: 480px) {
-  .cbt-sprite { font-size: 40px; }
-  .combat-log { height: 52px; }
-  .combat-actions button { padding: 10px 6px; }
-  .cbt-info { min-width: 108px; padding: 5px 8px; }
+/* Paysage court : monstre un peu plus haut, panneau compact. */
+@media (orientation: landscape) and (max-height: 460px) {
+  #battle-enemy { top: 8%; }
+  .be-sprite { font-size: clamp(52px, 20vh, 96px); }
+  .bp-top { margin-bottom: 8px; }
+  .bp-actions button { padding: 9px 6px; }
 }
 
 /* ---------- Overlay de fin ---------- */
@@ -534,22 +508,14 @@ kbd {
 @media (orientation: landscape) and (max-height: 480px) {
   #dpad { width: 132px; height: 132px; gap: 5px; }
   .ctrl-btn { font-size: 18px; border-radius: 12px; }
-  .action-btn { width: 82px; height: 82px; }
-  .action-btn .glyph { font-size: 26px; }
   .hp-bar { width: 96px; }
   #status { padding: 6px 8px; }
   .icon-btn { width: 38px; height: 38px; font-size: 17px; }
 }
 
-/* Très peu de hauteur : on masque le libellé de l'action pour gagner de la place. */
-@media (orientation: landscape) and (max-height: 380px) {
-  .action-btn .label { display: none; }
-  .action-btn { width: 68px; height: 68px; }
-}
-
 /* ---------- Écran large (desktop) : contrôles un peu plus discrets ---------- */
 @media (min-width: 900px) and (pointer: fine) {
-  #dpad, #actions { opacity: 0.9; }
+  #dpad { opacity: 0.9; }
 }
 
 /* ---------- Verrou paysage : invite à tourner l'appareil en portrait ---------- */

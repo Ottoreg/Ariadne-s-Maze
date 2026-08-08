@@ -35,8 +35,8 @@ const drawer = $('drawer');
 const drawerTitle = $('drawer-title');
 const scrim = $('scrim');
 
-// Éléments de la modale de combat.
-const combatEl = $('combat');
+// Éléments du combat (surimpression sur la vue 3D).
+const combatEl = $('battle');
 const combatLog = $('combat-log');
 const cbtEnemyName = $('cbt-enemy-name');
 const cbtEnemySprite = $('cbt-enemy-sprite');
@@ -251,8 +251,8 @@ function flashDetection() {
 }
 
 function showOverlay(g, won) {
-  // La modale de combat cède la place à l'écran de fin.
-  combatEl.classList.remove('visible');
+  // Le combat cède la place à l'écran de fin.
+  closeBattle();
   overlayTitle.textContent = won ? 'Niveau terminé 🎉' : 'Game Over 💀';
   overlayText.textContent = won
     ? `Sortie atteinte en ${g.turn} tours avec ${g.player.gold} or.`
@@ -262,7 +262,7 @@ function showOverlay(g, won) {
   overlay.classList.add('visible');
 }
 
-// ---------- Modale de combat ----------
+// ---------- Combat (le monstre surgit au centre, interface en bas) ----------
 let combatClosing = null;
 
 function openCombat(c) {
@@ -272,8 +272,11 @@ function openCombat(c) {
   combatLog.innerHTML = '';
   setActionsDisabled(false);
   renderCombat(c, false);
-  combatEl.classList.add('visible');
+  document.body.classList.add('in-combat'); // masque le d-pad, fige le décor
+  combatEl.classList.add('visible', 'surge'); // animation d'apparition du monstre
   combatEl.setAttribute('aria-hidden', 'false');
+  // Retire la classe d'apparition après l'animation.
+  setTimeout(() => combatEl.classList.remove('surge'), 500);
 }
 
 function renderCombat(c, animate) {
@@ -285,42 +288,36 @@ function renderCombat(c, animate) {
   cbtEnemyHpText.textContent = `${c.enemy.hp} / ${c.enemy.maxHp}`;
   cbtPlayerHpText.textContent = `${p.hp} / ${p.maxHp}`;
 
-  // Journal du combat (on affiche l'historique complet du combat en cours).
-  combatLog.innerHTML = '';
-  for (const line of c.log) {
-    const div = document.createElement('div');
-    div.className = 'cl';
-    div.textContent = line;
-    combatLog.appendChild(div);
-  }
-  combatLog.scrollTop = combatLog.scrollHeight;
+  // On n'affiche que la dernière ligne du journal (sous le monstre).
+  combatLog.textContent = c.log[c.log.length - 1] || '';
 
   if (animate) {
-    // Petite secousse sur le dernier combattant touché.
     const last = c.log[c.log.length - 1] || '';
-    if (last.includes('te touche') || last.includes('pares')) bump(cbtPlayerSprite());
+    // Le monstre encaisse un coup -> il tremble.
     if (last.includes('Tu frappes')) bump(cbtEnemySprite);
+    // Le joueur est touché -> flash rouge de l'écran.
+    if (last.includes('te touche')) flashDetection();
   }
 }
-
-function cbtPlayerSprite() { return $('cbt-player-sprite'); }
 
 function bump(el) {
   if (!el) return;
   el.classList.remove('hit');
-  // Force le reflow pour rejouer l'animation.
-  void el.offsetWidth;
+  void el.offsetWidth; // force le reflow pour rejouer l'animation
   el.classList.add('hit');
+}
+
+function closeBattle() {
+  combatEl.classList.remove('visible', 'surge');
+  combatEl.setAttribute('aria-hidden', 'true');
+  document.body.classList.remove('in-combat');
 }
 
 function endCombat(c) {
   setActionsDisabled(true);
-  // On laisse le temps de lire l'issue avant de fermer la modale.
+  // On laisse le temps de lire l'issue avant de refermer.
   const delay = c.result === 'lose' ? 500 : 950;
-  combatClosing = setTimeout(() => {
-    combatEl.classList.remove('visible');
-    combatEl.setAttribute('aria-hidden', 'true');
-  }, delay);
+  combatClosing = setTimeout(closeBattle, delay);
 }
 
 function setActionsDisabled(v) {

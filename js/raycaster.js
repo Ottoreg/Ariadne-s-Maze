@@ -142,6 +142,10 @@ export class Renderer3D {
       ctx.fillRect(c * COL_WIDTH, y0, COL_WIDTH + 1, y1 - y0);
     }
 
+    // Pendant un combat, on fige le décor (pas de sprites monde ni minimap) :
+    // le monstre et l'interface sont gérés en surimpression HTML.
+    if (game.inCombat) return;
+
     // --- Sprites (Minotaure, sortie, objets au sol) ---
     const sprites = this._collectSprites(game);
     // Distance au carré pour trier du plus loin au plus proche.
@@ -169,17 +173,21 @@ export class Renderer3D {
 
       const bright = Math.max(0.25, 1 - transformY / FOG_DIST);
       ctx.save();
-      ctx.globalAlpha = Math.min(1, bright + 0.1);
-      ctx.fillStyle = shade(s.color, bright - 1);
-      ctx.beginPath();
-      ctx.ellipse(screenX, cy, spriteH * 0.34, spriteH * 0.42, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = bright;
-      ctx.fillStyle = '#fff';
-      ctx.font = `${Math.floor(spriteH * 0.55)}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(s.glyph, screenX, cy);
+      if (s.kind === 'chest') {
+        this._drawChest(ctx, screenX, cy, spriteH, bright);
+      } else {
+        ctx.globalAlpha = Math.min(1, bright + 0.1);
+        ctx.fillStyle = shade(s.color, bright - 1);
+        ctx.beginPath();
+        ctx.ellipse(screenX, cy, spriteH * 0.34, spriteH * 0.42, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = bright;
+        ctx.fillStyle = '#fff';
+        ctx.font = `${Math.floor(spriteH * 0.55)}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(s.glyph, screenX, cy);
+      }
       ctx.restore();
     }
 
@@ -197,22 +205,55 @@ export class Renderer3D {
     if (game.visited[m.y][m.x] || m.chasing) {
       list.push({ x: m.x + 0.5, y: m.y + 0.5, color: '#c0392b', glyph: '🐂', scale: 1.05 });
     }
-    // Objets déposés au sol.
+    // Objets déposés au sol : petit coffre.
     for (const key of game.groundItems.keys()) {
       const [gx, gy] = key.split(',').map(Number);
-      list.push({ x: gx + 0.5, y: gy + 0.5, color: '#d9a441', glyph: '📦', scale: 0.55, low: true });
+      list.push({ x: gx + 0.5, y: gy + 0.5, kind: 'chest', scale: 0.5, low: true });
     }
     return list;
   }
 
-  // Minimap compacte en bas au centre.
+  // Dessine un petit coffre (billboard) à l'écran.
+  _drawChest(ctx, cx, cy, spriteH, bright) {
+    const w = spriteH * 0.62;
+    const h = spriteH * 0.4;
+    const x = cx - w / 2;
+    const y = cy - h / 2 + spriteH * 0.06;
+    const body = shade('#8a5a2b', bright - 1);
+    const lid = shade('#a56b33', bright - 1);
+    const band = shade('#4a2f16', bright - 1);
+    const gold = shade('#ffd166', bright - 1);
+    // Corps.
+    ctx.fillStyle = body;
+    ctx.fillRect(x, y, w, h);
+    // Couvercle bombé.
+    ctx.fillStyle = lid;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.quadraticCurveTo(cx, y - h * 0.55, x + w, y);
+    ctx.lineTo(x + w, y);
+    ctx.lineTo(x, y);
+    ctx.fill();
+    ctx.fillRect(x, y - 1, w, h * 0.18);
+    // Ferrures verticales + serrure.
+    ctx.fillStyle = band;
+    ctx.fillRect(x + w * 0.44, y - h * 0.5, w * 0.12, h * 1.5);
+    ctx.fillStyle = gold;
+    ctx.fillRect(x + w * 0.45, y + h * 0.28, w * 0.1, h * 0.28);
+    // Contour.
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+  }
+
+  // Minimap compacte en bas à droite.
   _drawMinimap(game) {
     const ctx = this.ctx;
     const maze = game.maze;
     const size = maze.size;
     const cell = Math.max(2, Math.floor(120 / size));
     const dim = cell * size;
-    const ox = (this.viewW - dim) / 2;
+    const ox = this.viewW - dim - 16;
     const oy = this.viewH - dim - 16;
 
     ctx.save();

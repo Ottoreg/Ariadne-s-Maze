@@ -1,6 +1,6 @@
 // sw.js — Service Worker : met le jeu en cache pour un fonctionnement hors-ligne (PWA).
 
-const CACHE = 'ariadne-maze-v5';
+const CACHE = 'ariadne-maze-v6';
 
 // Ressources à précacher lors de l'installation.
 const ASSETS = [
