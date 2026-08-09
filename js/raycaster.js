@@ -10,6 +10,8 @@
 // simplement la position et l'angle pour un déplacement/rotation fluides.
 
 import { TILE } from './maze.js';
+import { EVENT } from './events.js';
+import { itemDef, FISTS } from './player.js';
 
 // Couleurs de terrain (teinte des murs et du sol selon la zone).
 const TERR_COLORS = {
@@ -29,6 +31,9 @@ export class Renderer3D {
     this.px = null;
     this.py = null;
     this.angle = null;
+    // Oscillation des bras (balancement du viewmodel d'armes).
+    this._bobT = 0;
+    this._bobAmp = 0.4;
     this.resize();
     window.addEventListener('resize', () => this.resize());
   }
@@ -58,12 +63,18 @@ export class Renderer3D {
     const ty = p.y + 0.5;
     const ta = this._targetAngle(game.facing);
     if (this.px === null) { this.px = tx; this.py = ty; this.angle = ta; }
-    this.px += (tx - this.px) * EASE;
-    this.py += (ty - this.py) * EASE;
+    const dxp = tx - this.px, dyp = ty - this.py;
     let da = ta - this.angle;
     while (da > Math.PI) da -= 2 * Math.PI;
     while (da < -Math.PI) da += 2 * Math.PI;
+    // Le joueur est-il en train de bouger / pivoter ? (pour l'amplitude du bras)
+    const moving = Math.abs(dxp) + Math.abs(dyp) + Math.abs(da) > 0.02;
+    this.px += dxp * EASE;
+    this.py += dyp * EASE;
     this.angle += da * EASE;
+    // Avance la phase d'oscillation (plus rapide et ample en marchant).
+    this._bobT += moving ? 0.35 : 0.07;
+    this._bobAmp += ((moving ? 1 : 0.4) - this._bobAmp) * 0.12;
 
     const W = this.viewW;
     const H = this.viewH;
@@ -175,6 +186,8 @@ export class Renderer3D {
       ctx.save();
       if (s.kind === 'chest') {
         this._drawChest(ctx, screenX, cy, spriteH, bright);
+      } else if (s.kind === 'trap') {
+        this._drawTrap(ctx, screenX, cy, spriteH, bright);
       } else {
         ctx.globalAlpha = Math.min(1, bright + 0.1);
         ctx.fillStyle = shade(s.color, bright - 1);
@@ -191,8 +204,43 @@ export class Renderer3D {
       ctx.restore();
     }
 
+    // --- Armes en main (viewmodel façon Doom) ---
+    this._drawWeapons(game);
+
     // --- Minimap ---
     this._drawMinimap(game);
+  }
+
+  // Dessine les deux mains (bras droit / bras gauche) en bas de l'écran,
+  // avec une oscillation verticale en opposition de phase (mouvement de marche).
+  _drawWeapons(game) {
+    const ctx = this.ctx;
+    const W = this.viewW, H = this.viewH;
+    const amp = H * 0.03 * this._bobAmp;
+    const size = Math.min(H * 0.36, W * 0.3);
+    const eq = game.player.equipment;
+    const rEmoji = eq.brasD ? itemDef(eq.brasD.name).emoji : FISTS.emoji;
+    const lEmoji = eq.brasG ? itemDef(eq.brasG.name).emoji : FISTS.emoji;
+    // Main droite (à droite, penchée vers l'intérieur).
+    this._drawHand(rEmoji, W * 0.72, H, Math.sin(this._bobT) * amp, -0.16, false, size);
+    // Main gauche (à gauche, miroir, phase opposée).
+    this._drawHand(lEmoji, W * 0.28, H, Math.sin(this._bobT + Math.PI) * amp, 0.16, true, size);
+  }
+
+  _drawHand(emoji, x, baseY, yOff, rot, flip, size) {
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.translate(x, baseY - size * 0.12 + yOff);
+    ctx.rotate(rot);
+    if (flip) ctx.scale(-1, 1);
+    ctx.font = `${Math.floor(size)}px serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.shadowColor = 'rgba(0,0,0,0.55)';
+    ctx.shadowBlur = 10;
+    ctx.shadowOffsetY = 4;
+    ctx.fillText(emoji, 0, 0);
+    ctx.restore();
   }
 
   _collectSprites(game) {
@@ -209,6 +257,12 @@ export class Renderer3D {
     for (const key of game.groundItems.keys()) {
       const [gx, gy] = key.split(',').map(Number);
       list.push({ x: gx + 0.5, y: gy + 0.5, kind: 'chest', scale: 0.5, low: true });
+    }
+    // Pièges déclenchés (révélés au sol).
+    for (const [key, ev] of game.revealedEvents) {
+      if (ev.type !== EVENT.TRAP) continue;
+      const [gx, gy] = key.split(',').map(Number);
+      list.push({ x: gx + 0.5, y: gy + 0.5, kind: 'trap', scale: 0.5, low: true });
     }
     return list;
   }
@@ -244,6 +298,41 @@ export class Renderer3D {
     ctx.strokeStyle = 'rgba(0,0,0,0.45)';
     ctx.lineWidth = 1;
     ctx.strokeRect(x, y, w, h);
+  }
+
+  // Dessine un piège déclenché : plaque sombre + pointes ensanglantées.
+  _drawTrap(ctx, cx, cy, spriteH, bright) {
+    const w = spriteH * 0.7;
+    const h = spriteH * 0.16;
+    const x = cx - w / 2;
+    const y = cy + spriteH * 0.02;
+    // Plaque au sol.
+    ctx.fillStyle = shade('#20202a', bright - 1);
+    ctx.fillRect(x, y, w, h);
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+    // Pointes.
+    const spikes = 5;
+    const sw = w / spikes;
+    ctx.fillStyle = shade('#b6bcc6', bright - 1);
+    for (let i = 0; i < spikes; i++) {
+      const sx = x + i * sw;
+      ctx.beginPath();
+      ctx.moveTo(sx, y);
+      ctx.lineTo(sx + sw / 2, y - spriteH * 0.22);
+      ctx.lineTo(sx + sw, y);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Pointe de sang.
+    ctx.fillStyle = shade('#8e1b1b', bright - 1);
+    ctx.beginPath();
+    ctx.moveTo(cx - sw / 2, y - spriteH * 0.12);
+    ctx.lineTo(cx, y - spriteH * 0.22);
+    ctx.lineTo(cx + sw / 2, y - spriteH * 0.12);
+    ctx.closePath();
+    ctx.fill();
   }
 
   // Minimap compacte en bas à droite.
