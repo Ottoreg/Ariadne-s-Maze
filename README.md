@@ -34,8 +34,10 @@ Le jeu est une **PWA** installable et jouable hors-ligne.
 - 📱 **Verrou paysage** : le jeu invite à tourner l'appareil en portrait
   (`orientation: landscape` + tentative de verrouillage + invite plein écran).
 - 🕹️ **Vue 3D première personne (raycasting « à la Doom »)** : murs texturés/
-  ombrés selon la distance et la zone, sol/plafond, sprites (Minotaure, sortie,
-  objets au sol) avec occlusion, et **minimap**. Déplacement case par case :
+  ombrés selon la distance et la zone, sol/plafond, sprites avec occlusion
+  (Minotaure, sortie ⚑, **coffres** au sol, **pièges déclenchés**), et **minimap**
+  (en bas à droite). **Armes en main affichées** (bras droit + bras gauche) avec
+  **oscillation** de type balancement des bras. Déplacement case par case :
   **avancer/reculer** (consomment un tour) et **pivoter** de 90° (gratuit).
 - ❤️ **Points de vie** : à 0, l'aventurier meurt et le niveau recommence.
 - 🐂 **Minotaure** mobile : il patrouille, détecte le joueur dans un rayon donné,
